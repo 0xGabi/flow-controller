@@ -34,6 +34,10 @@ contract FlowController is Ownable {
     mapping(uint256 => Proposal) internal proposals;
     mapping(uint256 => bool) internal activeProposals;
 
+    event ProposalActivated(uint256 indexed id);
+    event ProposalDeactivated(uint256 indexed id);
+    event FlowUpdated(uint256 indexed id, address indexed beneficiary, uint256 rate);
+
     constructor(
         ConvictionVoting _cv,
         Superfluid _superfluid,
@@ -56,6 +60,8 @@ contract FlowController is Ownable {
         (, , beneficiary) = cv.getProposal(_proposalId);
 
         superfluid.createFlow(token, beneficiary, 0, bytes(0));
+
+        emit ProposalActivated(_proposalId);
     }
 
     function deactivateProposal(uint256 _proposalId) public onlyOwner {
@@ -65,6 +71,8 @@ contract FlowController is Ownable {
 
         (, , beneficiary) = cv.getProposal(_proposalId);
         superfluid.deleteFlow(token, beneficiary);
+
+        emit ProposalDeactivated(_proposalId);
     }
 
     function updateActiveProposals(uint256[] _proposalsIds) external {
@@ -84,6 +92,8 @@ contract FlowController is Ownable {
 
             // update flow
             superfluid.updateFlow(token, beneficiary, proposal.lastRate, bytes(0));
+
+            emit FlowUpdated(_proposalsIds[i], beneficiary, proposal.lastRate);
         }
     }
 
