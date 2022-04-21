@@ -77,7 +77,9 @@ contract FlowController is Ownable {
 
     function updateActiveProposals(uint256[] _proposalsIds) external {
         for (uint256 i = 0; i < _proposalsIds.lenght; i++) {
-            assert(activeProposals[_proposalsIds[i]]);
+            if (!activeProposals[_proposalsIds[i]]) {
+                continue;
+            }
 
             Proposal storage proposal = proposals[_proposalsIds[i]];
             if (proposal.lastTime == block.timestamp) {
