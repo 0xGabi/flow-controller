@@ -1,0 +1,10 @@
+[default]
+ffi = false
+fuzz_runs = 256
+optimizer = true
+optimizer_runs = 999999
+remappings = ["hardhat/=node_modules/hardhat/","@openzeppelin/=node_modules/@openzeppelin/","hardhat-deploy/=node_modules/hardhat-deploy/", "@blossom-labs/=node_modules/@blossom-labs/","@1hive/=node_modules/@1hive/"]
+verbosity = 1
+src = "src"
+out = ".dapp"
+# export DAPP_SOLC_VERSION=0.8.9
