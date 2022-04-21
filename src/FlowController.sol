@@ -49,21 +49,28 @@ contract FlowController is Ownable {
     }
 
     function activateProposal(uint256 _proposalId) public onlyOwner {
-        (, , beneficiary) = cv.getProposal(_proposalId);
+        assert(!activeProposals[_proposalId]);
 
         activeProposals[_proposalId] = true;
+
+        (, , beneficiary) = cv.getProposal(_proposalId);
+
         superfluid.createFlow(token, beneficiary, 0, bytes(0));
     }
 
     function deactivateProposal(uint256 _proposalId) public onlyOwner {
-        (, , beneficiary) = cv.getProposal(_proposalId);
+        assert(activeProposals[_proposalId]);
 
         activeProposals[_proposalId] = false;
+
+        (, , beneficiary) = cv.getProposal(_proposalId);
         superfluid.deleteFlow(token, beneficiary);
     }
 
     function updateActiveProposals(uint256[] _proposalsIds) external {
         for (uint256 i = 0; i < _proposalsIds.lenght; i++) {
+            assert(activeProposals[_proposalsIds[i]]);
+
             Proposal storage proposal = proposals[_proposalsIds[i]];
             if (proposal.lastTime == block.timestamp) {
                 continue; // Rates already updated
