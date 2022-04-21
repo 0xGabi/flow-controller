@@ -75,6 +75,10 @@ contract FlowController is Ownable {
         emit ProposalDeactivated(_proposalId);
     }
 
+    function isActive(uint256 _proposalId) external returns (bool) {
+        return (activeProposals[_proposalId] == true);
+    }
+
     function updateActiveProposals(uint256[] _proposalsIds) external {
         for (uint256 i = 0; i < _proposalsIds.lenght; i++) {
             if (!activeProposals[_proposalsIds[i]]) {
