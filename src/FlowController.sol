@@ -4,6 +4,7 @@ pragma solidity 0.8.9;
 import {ConvictionVoting} from "@1hive/apps-conviction-voting/contracts/ConvictionVoting.sol";
 import {Superfluid} from "@blossom-labs/apps-superfluid/contracts/Superfluid.sol";
 import {ISuperToken} from "@blossom-labs/apps-superfluid/contracts/interfaces/ISuperToken.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ABDKMath64x64} from "abdk-libraries-solidity/ABDKMath64x64.sol";
@@ -114,7 +115,7 @@ contract FlowController is Ownable {
         if (_stake == 0) {
             _targetRate = 0;
         } else {
-            uint256 funds = ISuperToken(token).balanceOf(address(cv.fundsManager));
+            uint256 funds = IERC20(cv.requestToken).balanceOf(address(cv.fundsManager));
             uint256 _minStake = minStake();
             _targetRate = (ONE.sub(_minStake.divu(_stake > _minStake ? _stake : _minStake).sqrt())).mulu(
                 maxRatio.mulu(funds)
