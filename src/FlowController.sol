@@ -98,6 +98,7 @@ contract FlowController is Ownable {
             (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalsIds[i]);
 
             // update flow
+            // TODO We are using a implicit casting for the flow rate during testing.
             superfluid.updateFlow(token, beneficiary, int96(int256(proposal.lastRate)), "");
 
             emit FlowUpdated(_proposalsIds[i], beneficiary, proposal.lastRate);
