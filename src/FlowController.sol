@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import {ConvictionVoting} from "@1hive/apps-conviction-voting/contracts/ConvictionVoting.sol";
-import {Superfluid} from "@blossom-labs/apps-superfluid/contracts/Superfluid.sol";
-import {ISuperToken} from "@blossom-labs/apps-superfluid/contracts/interfaces/ISuperToken.sol";
+import {ConvictionVoting} from "./interfaces/IConvictionVoting.sol";
+import {Superfluid} from "./interfaces/ISuperfluid.sol";
+import {ISuperToken} from "./interfaces/ISuperToken.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -48,9 +48,9 @@ contract FlowController is Ownable {
         superfluid = _superfluid;
         token = _token;
 
-        decay = cv.decay.divu(1e18).add(1);
-        maxRatio = cv.maxRatio.divu(1e18).add(1);
-        minStakeRatio = cv.minStakeRatio.divu(1e18).add(1);
+        decay = cv.decay().divu(1e18).add(1);
+        maxRatio = cv.maxRatio().divu(1e18).add(1);
+        minStakeRatio = cv.minStakeRatio().divu(1e18).add(1);
     }
 
     function activateProposal(uint256 _proposalId) public onlyOwner {
@@ -58,9 +58,9 @@ contract FlowController is Ownable {
 
         activeProposals[_proposalId] = true;
 
-        (, , beneficiary) = cv.getProposal(_proposalId);
+        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
 
-        superfluid.createFlow(token, beneficiary, 0, bytes(0));
+        superfluid.createFlow(token, beneficiary, 0, "");
 
         emit ProposalActivated(_proposalId);
     }
@@ -70,18 +70,18 @@ contract FlowController is Ownable {
 
         activeProposals[_proposalId] = false;
 
-        (, , beneficiary) = cv.getProposal(_proposalId);
+        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
         superfluid.deleteFlow(token, beneficiary);
 
         emit ProposalDeactivated(_proposalId);
     }
 
-    function isActive(uint256 _proposalId) external returns (bool) {
+    function isActive(uint256 _proposalId) public view returns (bool) {
         return (activeProposals[_proposalId] == true);
     }
 
-    function updateActiveProposals(uint256[] _proposalsIds) external {
-        for (uint256 i = 0; i < _proposalsIds.lenght; i++) {
+    function updateActiveProposals(uint256[] memory _proposalsIds) external {
+        for (uint256 i = 0; i < _proposalsIds.length; i++) {
             if (!activeProposals[_proposalsIds[i]]) {
                 continue;
             }
@@ -92,20 +92,20 @@ contract FlowController is Ownable {
             }
 
             // calculateRate and store it
-            proposal.lastRate = rate(_proposalId);
+            proposal.lastRate = getCurrentRate(_proposalsIds[i]);
             proposal.lastTime = block.timestamp;
 
-            (, , beneficiary) = cv.getProposal(_proposalsIds[i]);
+            (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalsIds[i]);
 
             // update flow
-            superfluid.updateFlow(token, beneficiary, proposal.lastRate, bytes(0));
+            superfluid.updateFlow(token, beneficiary, int96(proposal.lastRate.fromUInt()), "");
 
             emit FlowUpdated(_proposalsIds[i], beneficiary, proposal.lastRate);
         }
     }
 
     function minStake() public view returns (uint256) {
-        return minStakeRatio.mulu(cv.totalStaked);
+        return minStakeRatio.mulu(cv.totalStaked());
     }
 
     /**
@@ -115,7 +115,7 @@ contract FlowController is Ownable {
         if (_stake == 0) {
             _targetRate = 0;
         } else {
-            uint256 funds = IERC20(cv.requestToken).balanceOf(address(cv.fundsManager));
+            uint256 funds = IERC20(cv.requestToken()).balanceOf(address(cv.fundsManager()));
             uint256 _minStake = minStake();
             _targetRate = (ONE.sub(_minStake.divu(_stake > _minStake ? _stake : _minStake).sqrt())).mulu(
                 maxRatio.mulu(funds)
@@ -124,7 +124,7 @@ contract FlowController is Ownable {
     }
 
     function getTargetRate(uint256 _proposalId) public view returns (uint256) {
-        (, , , stakedTokens) = cv.getProposal(_proposalId);
+        (, , , uint256 stakedTokens, , , , , , ) = cv.getProposal(_proposalId);
 
         return calculateTargetRate(stakedTokens);
     }
