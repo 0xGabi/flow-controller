@@ -98,7 +98,7 @@ contract FlowController is Ownable {
             (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalsIds[i]);
 
             // update flow
-            superfluid.updateFlow(token, beneficiary, int96(proposal.lastRate.fromUInt()), "");
+            superfluid.updateFlow(token, beneficiary, int96(int256(proposal.lastRate)), "");
 
             emit FlowUpdated(_proposalsIds[i], beneficiary, proposal.lastRate);
         }
