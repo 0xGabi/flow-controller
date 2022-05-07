@@ -9,12 +9,7 @@ enum ProposalStatus {
 }
 
 contract ConvictionVoting {
-    uint256 public decay;
-    uint256 public maxRatio;
-    uint256 public minStakeRatio; //minThresholdStakePercentage
-
     uint256 public totalStaked;
-
     address public requestToken;
     address public fundsManager;
 

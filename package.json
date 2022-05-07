@@ -77,8 +77,6 @@
     "tenderly:push": "node ./_scripts.js tenderly:push"
   },
   "dependencies": {
-    "@1hive/apps-conviction-voting": "^1.1.1",
-    "@blossom-labs/apps-superfluid": "^0.0.1",
     "abdk-libraries-solidity": "^3.0.0"
   }
 }

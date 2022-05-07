@@ -35,6 +35,7 @@ contract FlowController is Ownable {
     mapping(uint256 => Proposal) internal proposals;
     mapping(uint256 => bool) internal activeProposals;
 
+    event FlowSettingsChanged(uint256 decay, uint256 maxRatio, uint256 minStakeRatio);
     event ProposalActivated(uint256 indexed id);
     event ProposalDeactivated(uint256 indexed id);
     event FlowUpdated(uint256 indexed id, address indexed beneficiary, uint256 rate);
@@ -42,15 +43,28 @@ contract FlowController is Ownable {
     constructor(
         ConvictionVoting _cv,
         Superfluid _superfluid,
-        ISuperToken _token
+        ISuperToken _token,
+        uint256 _decay,
+        uint256 _maxRatio,
+        uint256 _minStakeRatio
     ) {
         cv = _cv;
         superfluid = _superfluid;
         token = _token;
 
-        decay = cv.decay().divu(1e18).add(1);
-        maxRatio = cv.maxRatio().divu(1e18).add(1);
-        minStakeRatio = cv.minStakeRatio().divu(1e18).add(1);
+        setFlowSettings(_decay, _maxRatio, _minStakeRatio);
+    }
+
+    function setFlowSettings(
+        uint256 _decay,
+        uint256 _maxRatio,
+        uint256 _minStakeRatio
+    ) public onlyOwner {
+        decay = _decay.divu(1e18).add(1);
+        maxRatio = _maxRatio.divu(1e18).add(1);
+        minStakeRatio = _minStakeRatio.divu(1e18).add(1);
+
+        emit FlowSettingsChanged(_decay, _maxRatio, _minStakeRatio);
     }
 
     function activateProposal(uint256 _proposalId) public onlyOwner {
