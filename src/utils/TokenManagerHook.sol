@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identitifer:    GPL-3.0-or-later
+ * SPDX-License-Identitifer:    MIT
  */
 
 pragma solidity 0.8.9;
@@ -82,33 +82,33 @@ contract TokenManagerHook is ReentrancyGuard {
     // Function to override if necessary:
 
     function _onRegisterAsHook(
-        address _tokenManager,
-        uint256 _hookId,
-        address _token
+        address,
+        uint256,
+        address
     ) internal virtual {
         return;
     }
 
     function _onRevokeAsHook(
-        address _tokenManager,
-        uint256 _hookId,
-        address _token
+        address,
+        uint256,
+        address
     ) internal virtual {
         return;
     }
 
     function _onTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
+        address,
+        address,
+        uint256
     ) internal virtual returns (bool) {
         return true;
     }
 
     function _onApprove(
-        address _holder,
-        address _spender,
-        uint256 _amount
+        address,
+        address,
+        uint256
     ) internal virtual returns (bool) {
         return true;
     }
