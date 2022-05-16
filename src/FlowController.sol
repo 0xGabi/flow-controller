@@ -33,12 +33,16 @@ contract FlowController is Ownable {
     int128 internal minStakeRatio;
 
     mapping(uint256 => Proposal) internal proposals;
-    mapping(uint256 => bool) internal activeProposals;
+    uint256[10] internal activeProposals;
 
     event FlowSettingsChanged(uint256 decay, uint256 maxRatio, uint256 minStakeRatio);
     event ProposalActivated(uint256 indexed id);
     event ProposalDeactivated(uint256 indexed id);
     event FlowUpdated(uint256 indexed id, address indexed beneficiary, uint256 rate);
+
+    error ProposalAlreadyActive(uint256 position);
+    error ProposalAlreadyInactive();
+    error ProposalNeedsMoreStake();
 
     constructor(
         ConvictionVoting _cv,
@@ -51,7 +55,6 @@ contract FlowController is Ownable {
         cv = _cv;
         superfluid = _superfluid;
         token = _token;
-
         setFlowSettings(_decay, _maxRatio, _minStakeRatio);
     }
 
@@ -67,56 +70,106 @@ contract FlowController is Ownable {
         emit FlowSettingsChanged(_decay, _maxRatio, _minStakeRatio);
     }
 
-    function activateProposal(uint256 _proposalId) public onlyOwner {
-        assert(!activeProposals[_proposalId]);
+    function activateProposal(uint256 _proposalId) public {
+        require(_proposalId != 0);
+        (, , , uint256 min, , , , , , ) = cv.getProposal(_proposalId);
+        uint256 minIndex = _proposalId;
 
-        activeProposals[_proposalId] = true;
+        for (uint256 i = 0; i < activeProposals.length; i++) {
+            if (activeProposals[i] == _proposalId) {
+                revert ProposalAlreadyActive(i);
+            }
+            if (activeProposals[i] == 0) {
+                // If position i is empty, use it
+                min = 0;
+                minIndex = i;
+                break;
+            }
+            (, , , uint256 _min, , , , , , ) = cv.getProposal(activeProposals[i]);
+            if (_min < min) {
+                min = _min;
+                minIndex = i;
+            }
+        }
 
-        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
+        if (activeProposals[minIndex] == _proposalId) {
+            revert ProposalNeedsMoreStake();
+        }
 
-        superfluid.createFlow(token, beneficiary, 0, "");
-
-        emit ProposalActivated(_proposalId);
+        _replaceProposal(minIndex, _proposalId);
     }
 
     function deactivateProposal(uint256 _proposalId) public onlyOwner {
-        assert(activeProposals[_proposalId]);
-
-        activeProposals[_proposalId] = false;
-
-        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
-        superfluid.deleteFlow(token, beneficiary);
-
-        emit ProposalDeactivated(_proposalId);
-    }
-
-    function isActive(uint256 _proposalId) public view returns (bool) {
-        return (activeProposals[_proposalId] == true);
-    }
-
-    function updateActiveProposals(uint256[] memory _proposalsIds) external {
-        for (uint256 i = 0; i < _proposalsIds.length; i++) {
-            if (!activeProposals[_proposalsIds[i]]) {
-                continue;
+        require(_proposalId != 0);
+        for (uint256 i = 0; i < activeProposals.length; i++) {
+            if (activeProposals[i] == _proposalId) {
+                _deactivateProposal(i);
+                return;
             }
+        }
 
-            Proposal storage proposal = proposals[_proposalsIds[i]];
-            if (proposal.lastTime == block.timestamp) {
-                continue; // Rates already updated
+        revert ProposalAlreadyInactive();
+    }
+
+    function sync() external {
+        for (uint256 i = 0; i < activeProposals.length; i++) {
+            uint256 _proposalId = activeProposals[i];
+            Proposal storage proposal = proposals[_proposalId];
+            if (proposal.lastTime == block.timestamp || _proposalId == 0) {
+                continue; // Empty or rates already updated
             }
 
             // calculateRate and store it
-            proposal.lastRate = getCurrentRate(_proposalsIds[i]);
+            proposal.lastRate = getCurrentRate(_proposalId);
             proposal.lastTime = block.timestamp;
 
-            (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalsIds[i]);
+            (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
 
             // update flow
             // TODO We are using a implicit casting for the flow rate during testing.
             superfluid.updateFlow(token, beneficiary, int96(int256(proposal.lastRate)), "");
 
-            emit FlowUpdated(_proposalsIds[i], beneficiary, proposal.lastRate);
+            emit FlowUpdated(_proposalId, beneficiary, proposal.lastRate);
         }
+    }
+
+    function _activateProposal(uint256 _proposalIndex, uint256 _proposalId) internal {
+        require(activeProposals[_proposalIndex] == 0);
+        activeProposals[_proposalIndex] = _proposalId;
+        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
+        superfluid.createFlow(token, beneficiary, 0, "");
+        emit ProposalActivated(_proposalId);
+    }
+
+    function _deactivateProposal(uint256 _proposalIndex) internal {
+        uint256 _proposalId = activeProposals[_proposalIndex];
+        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
+        superfluid.deleteFlow(token, beneficiary);
+        emit ProposalDeactivated(_proposalId);
+        activeProposals[_proposalIndex] = 0;
+    }
+
+    function _replaceProposal(uint256 _proposalIndex, uint256 _proposalId) internal {
+        uint256 oldProposalId = activeProposals[_proposalIndex];
+        (, , address oldBeneficiary, , , , , , , ) = cv.getProposal(oldProposalId);
+        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
+
+        superfluid.deleteFlow(token, oldBeneficiary);
+        emit ProposalDeactivated(oldProposalId);
+
+        activeProposals[_proposalIndex] = _proposalId;
+
+        superfluid.createFlow(token, beneficiary, 0, "");
+        emit ProposalActivated(_proposalId);
+    }
+
+    function isActive(uint256 _proposalId) public view returns (bool) {
+        for (uint256 i = 0; i < activeProposals.length; i++) {
+            if (activeProposals[i] == _proposalId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function minStake() public view returns (uint256) {
