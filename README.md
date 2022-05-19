@@ -1,40 +1,18 @@
-# <h1 align="center"> Forge Template </h1>
-
-**Template repository for getting started quickly with Foundry projects**
+# Flow Controller <a href="#"><img align="right" src=".github/assets/blossom-labs.svg" height="80px" /></a>
 
 [![Foundry Tests](https://github.com/BlossomLabs/flow-controller/actions/workflows/ci.yml/badge.svg)](https://github.com/BlossomLabs/flow-controller/actions/workflows/ci.yml)
- [![Slither Lints](https://github.com/BlossomLabs/flow-controller/actions/workflows/lint.yml/badge.svg)](https://github.com/BlossomLabs/flow-controller/actions/workflows/lint.yml)
+[![Slither Lints](https://github.com/BlossomLabs/flow-controller/actions/workflows/lint.yml/badge.svg)](https://github.com/BlossomLabs/flow-controller/actions/workflows/lint.yml)
 
-## Getting Started
+Middleware smart contract with the resposability of:
+1. listens Conviction Voting app
+2. keeps track of active proposals (i.e. fluid proposals)
+3. calculates flow rates
+4. manage Superfluid flows
 
-Click "Use this template" on [GitHub](https://github.com/foundry-rs/forge-template) to create a new repository with this repo as the initial state.
+## Reference
 
-Or, if your repo already exists, run:
-```sh
-forge init
-forge build
-forge test
-```
+- [Fluid proposals discussion 🚰.](https://github.com/1Hive/gardens/discussions/536)
+- [Conviction Voting app.](https://github.com/1Hive/conviction-voting-app)
+- [Osmotic Funding prototype.](https://github.com/BlossomLabs/osmotic-funding)
+- [Superfluid Aragon app.](https://github.com/BlossomLabs/superfluid-aragon-app)
 
-## Writing your first test
-
-All you need is to `import forge-std/Test.sol` and then inherit it from your test contract. Forge-std's Test contract comes with a pre-instatiated [cheatcodes environment](https://book.getfoundry.sh/cheatcodes/), the `vm`. It also has support for [ds-test](https://book.getfoundry.sh/reference/ds-test.html)-style logs and assertions. Finally, it supports Hardhat's [console.log](https://github.com/brockelmore/forge-std/blob/master/src/console.sol). The logging functionalities require `-vvvv`.
-
-```solidity
-pragma solidity 0.8.10;
-
-import "forge-std/Test.sol";
-
-contract ContractTest is Test {
-    function testExample() public {
-        vm.roll(100);
-        console.log(1);
-        emit log("hi");
-        assertTrue(true);
-    }
-}
-```
-
-## Development
-
-This project uses [Foundry](https://getfoundry.sh). See the [book](https://book.getfoundry.sh/getting-started/installation.html) for instructions on how to install and use Foundry.
