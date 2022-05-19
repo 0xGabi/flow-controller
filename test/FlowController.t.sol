@@ -32,17 +32,4 @@ contract RosetteStoneTest is Test {
         vm.label(sender, "sender");
         vm.label(notAuthorized, "notAuthorizedAddress");
     }
-
-    function testSetFlowSettings(
-        uint256 _decay,
-        uint256 _maxRatio,
-        uint256 _minStakeRatio
-    ) public {
-        vm.prank(sender);
-        flowController.setFlowSettings(_decay, _maxRatio, _minStakeRatio);
-
-        int128 decay = _decay.divu(1e18).add(1);
-        int128 maxRatio = _maxRatio.divu(1e18).add(1);
-        int128 minStakeRatio = _minStakeRatio.divu(1e18).add(1);
-    }
 }
