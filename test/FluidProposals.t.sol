@@ -3,13 +3,13 @@ pragma solidity 0.8.13;
 
 import "forge-std/Test.sol";
 
-import "src/FlowController.sol";
+import "src/FluidProposals.sol";
 import {ABDKMath64x64} from "src/libraries/ABDKMath64x64.sol";
 
-contract RosetteStoneTest is Test {
+contract FluidProposalsTest is Test {
     using ABDKMath64x64 for int128;
     using ABDKMath64x64 for uint256;
-    FlowController flowController;
+    FluidProposals fluidProposals;
 
     // accounts
     address sender = address(1);
@@ -26,7 +26,7 @@ contract RosetteStoneTest is Test {
     uint256 WEIGHT = 25000000000000000;
 
     function setUp() public {
-        flowController = new FlowController(cv, superfluid, superToken, DECAY, MAX_RATIO, WEIGHT);
+        fluidProposals = new FluidProposals(cv, superfluid, superToken, DECAY, MAX_RATIO, WEIGHT);
 
         // labels
         vm.label(sender, "sender");

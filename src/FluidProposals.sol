@@ -8,7 +8,7 @@ import {Superfluid} from "./interfaces/ISuperfluid.sol";
 import {SuperToken} from "./interfaces/ISuperToken.sol";
 import {ABDKMath64x64} from "./libraries/ABDKMath64x64.sol";
 
-contract FlowController is Owned {
+contract FluidProposals is Owned {
     using ABDKMath64x64 for int128;
     using ABDKMath64x64 for uint256;
 
