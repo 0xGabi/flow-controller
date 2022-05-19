@@ -32,4 +32,6 @@ contract RosetteStoneTest is Test {
         vm.label(sender, "sender");
         vm.label(notAuthorized, "notAuthorizedAddress");
     }
+
+    function testSomething() public {}
 }
