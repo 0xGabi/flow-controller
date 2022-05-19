@@ -2,8 +2,8 @@
 
 **Template repository for getting started quickly with Foundry projects**
 
-![Foundry Tests](https://github.com/foundry-rs/forge-template/workflows/Foundry Tests/badge.svg)
- ![Slither Lints](https://github.com/foundry-rs/forge-template/workflows/Lints/badge.svg)
+[![Foundry Tests](https://github.com/BlossomLabs/flow-controller/actions/workflows/ci.yml/badge.svg)](https://github.com/BlossomLabs/flow-controller/actions/workflows/ci.yml)
+ [![Slither Lints](https://github.com/BlossomLabs/flow-controller/actions/workflows/lint.yml/badge.svg)](https://github.com/BlossomLabs/flow-controller/actions/workflows/lint.yml)
 
 ## Getting Started
 
