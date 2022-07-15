@@ -31,10 +31,18 @@ contract FluidProposals is Owned {
     mapping(uint256 => Proposal) internal proposals;
     uint256[10] internal activeProposals;
 
-    event FlowSettingsChanged(uint256 decay, uint256 maxRatio, uint256 minStakeRatio);
+    event FlowSettingsChanged(
+        uint256 decay,
+        uint256 maxRatio,
+        uint256 minStakeRatio
+    );
     event ProposalActivated(uint256 indexed id);
     event ProposalDeactivated(uint256 indexed id);
-    event FlowUpdated(uint256 indexed id, address indexed beneficiary, uint256 rate);
+    event FlowUpdated(
+        uint256 indexed id,
+        address indexed beneficiary,
+        uint256 rate
+    );
 
     error ProposalAlreadyActive(uint256 position);
     error ProposalAlreadyInactive();
@@ -81,7 +89,9 @@ contract FluidProposals is Owned {
                 minIndex = i;
                 break;
             }
-            (, , , uint256 _min, , , , , , ) = cv.getProposal(activeProposals[i]);
+            (, , , uint256 _min, , , , , , ) = cv.getProposal(
+                activeProposals[i]
+            );
             if (_min < min) {
                 min = _min;
                 minIndex = i;
@@ -119,17 +129,26 @@ contract FluidProposals is Owned {
             proposal.lastRate = getCurrentRate(_proposalId);
             proposal.lastTime = block.timestamp;
 
-            (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
+            (, , address beneficiary, , , , , , , ) = cv.getProposal(
+                _proposalId
+            );
 
             // update flow
             // TODO Test we can implicit casting the flow rate.
-            superfluid.updateFlow(token, beneficiary, int96(int256(proposal.lastRate)), "");
+            superfluid.updateFlow(
+                token,
+                beneficiary,
+                int96(int256(proposal.lastRate)),
+                ""
+            );
 
             emit FlowUpdated(_proposalId, beneficiary, proposal.lastRate);
         }
     }
 
-    function _activateProposal(uint256 _proposalIndex, uint256 _proposalId) internal {
+    function _activateProposal(uint256 _proposalIndex, uint256 _proposalId)
+        internal
+    {
         require(activeProposals[_proposalIndex] == 0);
         activeProposals[_proposalIndex] = _proposalId;
         (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
@@ -145,9 +164,13 @@ contract FluidProposals is Owned {
         activeProposals[_proposalIndex] = 0;
     }
 
-    function _replaceProposal(uint256 _proposalIndex, uint256 _proposalId) internal {
+    function _replaceProposal(uint256 _proposalIndex, uint256 _proposalId)
+        internal
+    {
         uint256 oldProposalId = activeProposals[_proposalIndex];
-        (, , address oldBeneficiary, , , , , , , ) = cv.getProposal(oldProposalId);
+        (, , address oldBeneficiary, , , , , , , ) = cv.getProposal(
+            oldProposalId
+        );
         (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
 
         superfluid.deleteFlow(token, oldBeneficiary);
@@ -175,15 +198,25 @@ contract FluidProposals is Owned {
     /**
      * @dev targetRate = (1 - sqrt(minStake / min(staked, minStake))) * maxRatio * funds
      */
-    function calculateTargetRate(uint256 _stake) public view returns (uint256 _targetRate) {
+    function calculateTargetRate(uint256 _stake)
+        public
+        view
+        returns (uint256 _targetRate)
+    {
         if (_stake == 0) {
             _targetRate = 0;
         } else {
-            uint256 funds = ERC20(cv.requestToken()).balanceOf(address(cv.fundsManager()));
-            uint256 _minStake = minStake();
-            _targetRate = (ONE.sub(_minStake.divu(_stake > _minStake ? _stake : _minStake).sqrt())).mulu(
-                maxRatio.mulu(funds)
+            uint256 funds = ERC20(cv.requestToken()).balanceOf(
+                address(cv.fundsManager())
             );
+            uint256 _minStake = minStake();
+            _targetRate = (
+                ONE.sub(
+                    _minStake
+                        .divu(_stake > _minStake ? _stake : _minStake)
+                        .sqrt()
+                )
+            ).mulu(maxRatio.mulu(funds));
         }
     }
 
@@ -206,7 +239,11 @@ contract FluidProposals is Owned {
         return at.mulu(_lastRate) + (ONE.sub(at).mulu(_targetRate)); // No need to check overflow on solidity >=0.8.0
     }
 
-    function getCurrentRate(uint256 _proposalId) public view returns (uint256 _rate) {
+    function getCurrentRate(uint256 _proposalId)
+        public
+        view
+        returns (uint256 _rate)
+    {
         Proposal storage proposal = proposals[_proposalId];
         assert(proposal.lastTime <= block.timestamp);
         return
