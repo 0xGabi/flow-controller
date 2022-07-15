@@ -102,6 +102,10 @@ contract FluidProposals is Owned {
             revert ProposalNeedsMoreStake();
         }
 
+        if (activeProposals[minIndex] == 0) {
+            _activateProposal(minIndex, _proposalId);
+        }
+
         _replaceProposal(minIndex, _proposalId);
     }
 
