@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity >=0.8.13;
 
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {Owned} from "solmate/auth/Owned.sol";
@@ -30,13 +30,14 @@ contract FluidProposals is Owned {
 
     mapping(uint256 => Proposal) internal proposals;
     uint256[10] internal activeProposals;
+    address[10] internal beneficiaries;
 
     event FlowSettingsChanged(
         uint256 decay,
         uint256 maxRatio,
         uint256 minStakeRatio
     );
-    event ProposalActivated(uint256 indexed id);
+    event ProposalActivated(uint256 indexed id, address beneficiary);
     event ProposalDeactivated(uint256 indexed id);
     event FlowUpdated(
         uint256 indexed id,
@@ -74,7 +75,9 @@ contract FluidProposals is Owned {
         emit FlowSettingsChanged(_decay, _maxRatio, _minStakeRatio);
     }
 
-    function activateProposal(uint256 _proposalId) public {
+    function activateProposal(uint256 _proposalId, address _beneficiary)
+        public
+    {
         require(_proposalId != 0);
         (, , , uint256 min, , , , , , ) = cv.getProposal(_proposalId);
         uint256 minIndex = _proposalId;
@@ -103,10 +106,10 @@ contract FluidProposals is Owned {
         }
 
         if (activeProposals[minIndex] == 0) {
-            _activateProposal(minIndex, _proposalId);
+            _activateProposal(minIndex, _proposalId, _beneficiary);
         }
 
-        _replaceProposal(minIndex, _proposalId);
+        _replaceProposal(minIndex, _proposalId, _beneficiary);
     }
 
     function deactivateProposal(uint256 _proposalId) public onlyOwner {
@@ -133,57 +136,55 @@ contract FluidProposals is Owned {
             proposal.lastRate = getCurrentRate(_proposalId);
             proposal.lastTime = block.timestamp;
 
-            (, , address beneficiary, , , , , , , ) = cv.getProposal(
-                _proposalId
-            );
-
             // update flow
             // TODO Test we can implicit casting the flow rate.
             superfluid.updateFlow(
                 token,
-                beneficiary,
+                beneficiaries[i],
                 int96(int256(proposal.lastRate)),
                 ""
             );
 
-            emit FlowUpdated(_proposalId, beneficiary, proposal.lastRate);
+            emit FlowUpdated(_proposalId, beneficiaries[i], proposal.lastRate);
         }
     }
 
-    function _activateProposal(uint256 _proposalIndex, uint256 _proposalId)
-        internal
-    {
+    function _activateProposal(
+        uint256 _proposalIndex,
+        uint256 _proposalId,
+        address _beneficiary
+    ) internal {
         require(activeProposals[_proposalIndex] == 0);
         activeProposals[_proposalIndex] = _proposalId;
-        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
-        superfluid.createFlow(token, beneficiary, 0, "");
-        emit ProposalActivated(_proposalId);
+        beneficiaries[_proposalIndex] = _beneficiary;
+        superfluid.createFlow(token, _beneficiary, 0, "");
+        emit ProposalActivated(_proposalId, _beneficiary);
     }
 
     function _deactivateProposal(uint256 _proposalIndex) internal {
         uint256 _proposalId = activeProposals[_proposalIndex];
-        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
+        address beneficiary = beneficiaries[_proposalIndex];
         superfluid.deleteFlow(token, beneficiary);
         emit ProposalDeactivated(_proposalId);
         activeProposals[_proposalIndex] = 0;
     }
 
-    function _replaceProposal(uint256 _proposalIndex, uint256 _proposalId)
-        internal
-    {
+    function _replaceProposal(
+        uint256 _proposalIndex,
+        uint256 _proposalId,
+        address _beneficiary
+    ) internal {
         uint256 oldProposalId = activeProposals[_proposalIndex];
-        (, , address oldBeneficiary, , , , , , , ) = cv.getProposal(
-            oldProposalId
-        );
-        (, , address beneficiary, , , , , , , ) = cv.getProposal(_proposalId);
+        address oldBeneficiary = beneficiaries[_proposalIndex];
 
         superfluid.deleteFlow(token, oldBeneficiary);
         emit ProposalDeactivated(oldProposalId);
 
         activeProposals[_proposalIndex] = _proposalId;
+        beneficiaries[_proposalIndex] = _beneficiary;
 
-        superfluid.createFlow(token, beneficiary, 0, "");
-        emit ProposalActivated(_proposalId);
+        superfluid.createFlow(token, _beneficiary, 0, "");
+        emit ProposalActivated(_proposalId, _beneficiary);
     }
 
     function isActive(uint256 _proposalId) public view returns (bool) {
