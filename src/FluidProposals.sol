@@ -142,7 +142,7 @@ contract FluidProposals is Owned {
                 token,
                 beneficiaries[i],
                 int96(int256(proposal.lastRate)),
-                ""
+                "0x"
             );
 
             emit FlowUpdated(_proposalId, beneficiaries[i], proposal.lastRate);
@@ -157,7 +157,8 @@ contract FluidProposals is Owned {
         require(activeProposals[_proposalIndex] == 0);
         activeProposals[_proposalIndex] = _proposalId;
         beneficiaries[_proposalIndex] = _beneficiary;
-        superfluid.createFlow(token, _beneficiary, 0, "");
+        // Require initial flowRate > 0
+        superfluid.createFlow(token, _beneficiary, int96(1), "0x");
         emit ProposalActivated(_proposalId, _beneficiary);
     }
 
@@ -183,7 +184,8 @@ contract FluidProposals is Owned {
         activeProposals[_proposalIndex] = _proposalId;
         beneficiaries[_proposalIndex] = _beneficiary;
 
-        superfluid.createFlow(token, _beneficiary, 0, "");
+        // Require initial flowRate > 0
+        superfluid.createFlow(token, _beneficiary, int96(1), "0x");
         emit ProposalActivated(_proposalId, _beneficiary);
     }
 
