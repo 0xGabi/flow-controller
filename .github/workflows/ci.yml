@@ -22,8 +22,5 @@ jobs:
       - name: Install deps
         run: forge install
 
-      - name: Check gas snapshots
-        run: forge snapshot --check
-
       - name: Run tests
-        run: forge test
+        run: forge test --fork-url ${{ secrets.RINKEBY_RPC }} --etherscan-api-key ${{ secrets.ETHERSCAN_API }} -vvv
