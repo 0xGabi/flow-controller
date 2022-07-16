@@ -57,6 +57,15 @@ contract FluidProposalsTest is Test {
 
     function testActivateProposal() public {
         fluidProposals.activateProposal(2, sender);
+    }
+
+    function testActivateProposalAndSync() public {
+        fluidProposals.activateProposal(2, sender);
         fluidProposals.sync();
+    }
+
+    function testDeactivateProposal() public {
+        fluidProposals.activateProposal(2, sender);
+        fluidProposals.deactivateProposal(2);
     }
 }
