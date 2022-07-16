@@ -4,6 +4,7 @@ pragma solidity >=0.8.13;
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 import {ConvictionVoting} from "./interfaces/IConvictionVoting.sol";
+import {FundsManager} from "./interfaces/IFundsManager.sol";
 import {Superfluid} from "./interfaces/ISuperfluid.sol";
 import {SuperToken} from "./interfaces/ISuperToken.sol";
 import {ABDKMath64x64} from "./libraries/ABDKMath64x64.sol";
@@ -142,7 +143,7 @@ contract FluidProposals is Owned {
                 token,
                 beneficiaries[i],
                 int96(int256(proposal.lastRate)),
-                "0x"
+                ""
             );
 
             emit FlowUpdated(_proposalId, beneficiaries[i], proposal.lastRate);
@@ -158,7 +159,7 @@ contract FluidProposals is Owned {
         activeProposals[_proposalIndex] = _proposalId;
         beneficiaries[_proposalIndex] = _beneficiary;
         // Require initial flowRate > 0
-        superfluid.createFlow(token, _beneficiary, int96(1), "0x");
+        superfluid.createFlow(token, _beneficiary, int96(1), "");
         emit ProposalActivated(_proposalId, _beneficiary);
     }
 
@@ -185,7 +186,7 @@ contract FluidProposals is Owned {
         beneficiaries[_proposalIndex] = _beneficiary;
 
         // Require initial flowRate > 0
-        superfluid.createFlow(token, _beneficiary, int96(1), "0x");
+        superfluid.createFlow(token, _beneficiary, int96(1), "");
         emit ProposalActivated(_proposalId, _beneficiary);
     }
 
@@ -213,8 +214,8 @@ contract FluidProposals is Owned {
         if (_stake == 0) {
             _targetRate = 0;
         } else {
-            uint256 funds = ERC20(cv.requestToken()).balanceOf(
-                address(cv.fundsManager())
+            uint256 funds = FundsManager(cv.fundsManager()).balance(
+                cv.requestToken()
             );
             uint256 _minStake = minStake();
             _targetRate = (
