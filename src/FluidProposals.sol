@@ -116,6 +116,7 @@ contract FluidProposals is Owned {
 
         if (activeProposals[minIndex] == 0) {
             _activateProposal(minIndex, _proposalId, _beneficiary);
+            return;
         }
 
         _replaceProposal(minIndex, _proposalId, _beneficiary);

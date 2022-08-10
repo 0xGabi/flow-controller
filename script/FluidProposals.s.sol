@@ -6,10 +6,10 @@ import "forge-std/Script.sol";
 import "../src/FluidProposals.sol";
 
 contract FluidProposalsScript is Script {
-    // rinkeby test env
-    address cv = 0x06B35a5E6799Ab2FFdC383E81490cd72c983d5a5;
-    address superfluid = 0xFD0c006C16395dE18D38eFbcbD85b53d68366235;
-    address superToken = 0xE166aa0a466d7d012940c872AA0e0cd74c7bc7e9;
+    // gnosis env
+    address cv = 0x0B21081C6F8b1990f53FC76279Cc41ba22D7AFE2;
+    address superfluid = 0xae19d972C8FE568B3e0D12Ad4A814816f8F3c0c2;
+    address superToken = 0xc0712524B39323eb2437E69226b261d928629dC8;
 
     // flow settings
     uint256 DECAY = 999999900000000000;
