@@ -46,6 +46,7 @@ contract FluidProposals is Owned {
         uint256 rate
     );
 
+    error ProposalOnlySubmmiter();
     error ProposalAlreadyActive(uint256 position);
     error ProposalAlreadyInactive();
     error ProposalNeedsMoreStake();
@@ -80,7 +81,14 @@ contract FluidProposals is Owned {
         public
     {
         require(_proposalId != 0);
-        (, , , uint256 min, , , , , , ) = cv.getProposal(_proposalId);
+        (, , , uint256 min, , , , , address submmiter, ) = cv.getProposal(
+            _proposalId
+        );
+
+        if (msg.sender != submmiter) {
+            revert ProposalOnlySubmmiter();
+        }
+
         uint256 minIndex = _proposalId;
 
         for (uint256 i = 0; i < activeProposals.length; i++) {
@@ -115,6 +123,12 @@ contract FluidProposals is Owned {
 
     function deactivateProposal(uint256 _proposalId) public onlyOwner {
         require(_proposalId != 0);
+        (, , , , , , , , address submmiter, ) = cv.getProposal(_proposalId);
+
+        if (msg.sender != submmiter) {
+            revert ProposalOnlySubmmiter();
+        }
+
         for (uint256 i = 0; i < activeProposals.length; i++) {
             if (activeProposals[i] == _proposalId) {
                 _deactivateProposal(i);
@@ -157,7 +171,7 @@ contract FluidProposals is Owned {
         require(activeProposals[_proposalIndex] == 0);
         activeProposals[_proposalIndex] = _proposalId;
         beneficiaries[_proposalIndex] = _beneficiary;
-        // Require initial flowRate > 0
+        // Superfluid require initial flowRate > 0, so int96(1)
         superfluid.createFlow(token, _beneficiary, int96(1), "");
         emit ProposalActivated(_proposalId, _beneficiary);
     }
