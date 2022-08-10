@@ -11,7 +11,7 @@ enum ProposalStatus {
 contract ConvictionVoting {
     uint256 public totalStaked;
     address public requestToken;
-    address public fundsManager;
+    address public vault; // fundsManager for Gardens created with new template
 
     function getProposal(uint256 _proposalId)
         external

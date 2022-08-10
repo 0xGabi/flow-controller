@@ -122,7 +122,7 @@ contract FluidProposals is Owned {
         _replaceProposal(minIndex, _proposalId, _beneficiary);
     }
 
-    function deactivateProposal(uint256 _proposalId) public onlyOwner {
+    function deactivateProposal(uint256 _proposalId) public {
         require(_proposalId != 0);
         (, , , , , , , , address submmiter, ) = cv.getProposal(_proposalId);
 
@@ -228,9 +228,8 @@ contract FluidProposals is Owned {
         if (_stake == 0) {
             _targetRate = 0;
         } else {
-            uint256 funds = FundsManager(cv.fundsManager()).balance(
-                cv.requestToken()
-            );
+            // The old CV that 1Hive uses have a vault reference instead of fundsManager
+            uint256 funds = FundsManager(cv.vault()).balance(cv.requestToken());
             uint256 _minStake = minStake();
             _targetRate = (
                 ONE.sub(
