@@ -4,7 +4,9 @@ out/
 
 # Ignores development broadcast logs
 !/broadcast
-/broadcast/*
+/broadcast/**/*.json
 /broadcast/*/31337/
+
+!/broadcast/FluidProposals.s.sol/100/run-latest.json
 
 .env

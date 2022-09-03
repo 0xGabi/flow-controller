@@ -17,6 +17,7 @@ contract FluidProposalsTest is Test {
     address sender = address(1);
     address notAuthorized = address(2);
     address voting = 0x5F137364b1f6ad84a2863D5dcD27f4841c077E53;
+    address creator = 0x5CfAdf589a694723F9Ed167D647582B3Db3b33b3;
 
     // rinkeby test env
     address cv = 0x06B35a5E6799Ab2FFdC383E81490cd72c983d5a5;
@@ -56,16 +57,27 @@ contract FluidProposalsTest is Test {
     }
 
     function testActivateProposal() public {
+        vm.prank(creator);
         fluidProposals.activateProposal(2, sender);
     }
 
     function testActivateProposalAndSync() public {
+        vm.prank(creator);
         fluidProposals.activateProposal(2, sender);
         fluidProposals.sync();
     }
 
     function testDeactivateProposal() public {
+        vm.prank(creator);
         fluidProposals.activateProposal(2, sender);
         fluidProposals.deactivateProposal(2);
+    }
+
+    function testActivateTwoProposalsAndSync() public {
+        vm.startPrank(creator);
+        fluidProposals.activateProposal(2, sender);
+        fluidProposals.activateProposal(3, notAuthorized);
+        vm.stopPrank();
+        fluidProposals.sync();
     }
 }

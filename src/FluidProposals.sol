@@ -47,7 +47,8 @@ contract FluidProposals is Owned {
     );
 
     error ProposalOnlySubmmiter();
-    error ProposalAlreadyActive(uint256 position);
+    error ProposalAlreadyActive();
+    error ProposalBeneficiaryAlreadyUse();
     error ProposalAlreadyInactive();
     error ProposalNeedsMoreStake();
 
@@ -81,6 +82,7 @@ contract FluidProposals is Owned {
         public
     {
         require(_proposalId != 0);
+        require(_beneficiary != address(0));
         (, , , uint256 min, , , , , address submmiter, ) = cv.getProposal(
             _proposalId
         );
@@ -93,7 +95,10 @@ contract FluidProposals is Owned {
 
         for (uint256 i = 0; i < activeProposals.length; i++) {
             if (activeProposals[i] == _proposalId) {
-                revert ProposalAlreadyActive(i);
+                revert ProposalAlreadyActive();
+            }
+            if (beneficiaries[i] == _beneficiary) {
+                revert ProposalBeneficiaryAlreadyUse();
             }
             if (activeProposals[i] == 0) {
                 // If position i is empty, use it
@@ -152,15 +157,21 @@ contract FluidProposals is Owned {
             proposal.lastRate = getCurrentRate(_proposalId);
             proposal.lastTime = block.timestamp;
 
-            // update flow
-            superfluid.updateFlow(
-                token,
-                beneficiaries[i],
-                int96(int256(proposal.lastRate)),
-                ""
-            );
+            if (proposal.lastRate != 0) {
+                // update flow
+                superfluid.updateFlow(
+                    token,
+                    beneficiaries[i],
+                    int96(int256(proposal.lastRate)),
+                    ""
+                );
 
-            emit FlowUpdated(_proposalId, beneficiaries[i], proposal.lastRate);
+                emit FlowUpdated(
+                    _proposalId,
+                    beneficiaries[i],
+                    proposal.lastRate
+                );
+            }
         }
     }
 
@@ -183,6 +194,7 @@ contract FluidProposals is Owned {
         superfluid.deleteFlow(token, beneficiary);
         emit ProposalDeactivated(_proposalId);
         activeProposals[_proposalIndex] = 0;
+        beneficiaries[_proposalIndex] = address(0);
     }
 
     function _replaceProposal(
