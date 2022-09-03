@@ -76,21 +76,8 @@ contract FluidProposalsTest is Test {
     function testActivateTwoProposalsAndSync() public {
         vm.startPrank(creator);
         fluidProposals.activateProposal(2, sender);
-        fluidProposals.activateProposal(3, sender);
+        fluidProposals.activateProposal(3, notAuthorized);
         vm.stopPrank();
         fluidProposals.sync();
     }
-
-    function testActivateTwoProposalsAndSync() public {
-        vm.startPrank(creator);
-        fluidProposals.activateProposal(2, sender);
-        fluidProposals.activateProposal(3, sender);
-        fluidProposals.sync();
-    }
-
-    // function testActivateTwoProposalsAndSync() public {
-    //     fluidProposals.activateProposal(2, sender);
-    //     fluidProposals.activateProposal(3, sender);
-    //     fluidProposals.sync();
-    // }
 }
