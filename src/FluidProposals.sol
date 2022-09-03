@@ -157,15 +157,21 @@ contract FluidProposals is Owned {
             proposal.lastRate = getCurrentRate(_proposalId);
             proposal.lastTime = block.timestamp;
 
-            // update flow
-            superfluid.updateFlow(
-                token,
-                beneficiaries[i],
-                int96(int256(proposal.lastRate)),
-                ""
-            );
+            if (proposal.lastRate != 0) {
+                // update flow
+                superfluid.updateFlow(
+                    token,
+                    beneficiaries[i],
+                    int96(int256(proposal.lastRate)),
+                    ""
+                );
 
-            emit FlowUpdated(_proposalId, beneficiaries[i], proposal.lastRate);
+                emit FlowUpdated(
+                    _proposalId,
+                    beneficiaries[i],
+                    proposal.lastRate
+                );
+            }
         }
     }
 

@@ -85,8 +85,6 @@ contract FluidProposalsTest is Test {
         vm.startPrank(creator);
         fluidProposals.activateProposal(2, sender);
         fluidProposals.activateProposal(3, sender);
-
-        vm.stopPrank();
         fluidProposals.sync();
     }
 
