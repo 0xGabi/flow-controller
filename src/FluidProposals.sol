@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {ERC20} from "./solmate/ERC20.sol";
 import {Owned} from "./solmate/Owned.sol";
-import {ConvictionVoting} from "./interfaces/IConvictionVoting.sol";
+import {ConvictionVoting, ProposalStatus} from "./interfaces/IConvictionVoting.sol";
 import {FundsManager} from "./interfaces/IFundsManager.sol";
 import {Superfluid} from "./interfaces/ISuperfluid.sol";
 import {SuperToken} from "./interfaces/ISuperToken.sol";
@@ -30,8 +30,8 @@ contract FluidProposals is Owned {
     int128 public minStakeRatio;
 
     mapping(uint256 => Proposal) internal proposals;
-    uint256[10] internal activeProposals;
-    address[10] internal beneficiaries;
+    uint256[15] internal activeProposals;
+    address[15] internal beneficiaries;
 
     event FlowSettingsChanged(
         uint256 decay,
@@ -46,6 +46,8 @@ contract FluidProposals is Owned {
         uint256 rate
     );
 
+    error ProposalOnlyActive();
+    error ProposalOnlySignaling();
     error ProposalOnlySubmmiter();
     error ProposalAlreadyActive();
     error ProposalBeneficiaryAlreadyUse();
@@ -83,9 +85,26 @@ contract FluidProposals is Owned {
     {
         require(_proposalId != 0);
         require(_beneficiary != address(0));
-        (, , , uint256 min, , , , , address submmiter, ) = cv.getProposal(
-            _proposalId
-        );
+        (
+            uint256 amount,
+            ,
+            ,
+            uint256 min,
+            ,
+            ,
+            ,
+            ProposalStatus status,
+            address submmiter,
+
+        ) = cv.getProposal(_proposalId);
+
+        if (status != ProposalStatus.Active) {
+            revert ProposalOnlyActive();
+        }
+
+        if (amount != 0) {
+            revert ProposalOnlySignaling();
+        }
 
         if (msg.sender != submmiter) {
             revert ProposalOnlySubmmiter();
@@ -151,6 +170,15 @@ contract FluidProposals is Owned {
             Proposal storage proposal = proposals[_proposalId];
             if (proposal.lastTime == block.timestamp || _proposalId == 0) {
                 continue; // Empty or rates already updated
+            }
+
+            // Check still an active proposal
+            (, , , , , , , ProposalStatus status, , ) = cv.getProposal(
+                _proposalId
+            );
+            if (status != ProposalStatus.Active) {
+                _deactivateProposal(_proposalId);
+                continue;
             }
 
             // calculateRate and store it
