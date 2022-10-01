@@ -19,19 +19,19 @@ contract FluidProposalsTest is Test {
     address voting = 0x5F137364b1f6ad84a2863D5dcD27f4841c077E53;
     address creator = 0x5CfAdf589a694723F9Ed167D647582B3Db3b33b3;
 
-    // rinkeby test env
-    address cv = 0x06B35a5E6799Ab2FFdC383E81490cd72c983d5a5;
-    address superfluid = 0xFD0c006C16395dE18D38eFbcbD85b53d68366235;
-    address superToken = 0xE166aa0a466d7d012940c872AA0e0cd74c7bc7e9;
+    // gnosis test env
+    address cv = 0x16c87B344199C51119Ec7Df2364391C35895a7A4;
+    address superfluid = 0x0C7bfB0A57f3223b9Cf1d3C2ba2618481714A35D;
+    address superToken = 0xc0712524B39323eb2437E69226b261d928629dC8;
 
     IACL acl = IACL(0x5164aE80218773F06a5455585ef31781453AEc4C);
     bytes32 constant MANAGE_STREAMS_ROLE =
         0x56c3496db27efc6d83ab1a24218f016191aab8835d442bc0fa8502f327132cbe;
 
-    // flow settings
-    uint256 DECAY = 999999900000000000;
-    uint256 MAX_RATIO = 7716049382;
-    uint256 WEIGHT = 25000000000000000;
+    // flow settings, check https://www.desmos.com/calculator/zce2ygj7bd for more details
+    uint256 DECAY = 999999197747000000; // 10 days (864000 seconds) to reach 50% of targetRate, check https://www.desmos.com/calculator/twlx3u8e9u for mor details
+    uint256 MAX_RATIO = 19290123456; // 5% of Common Pool per month = Math.floor(0.05e18 / (30 * 24 * 60 * 60))
+    uint256 MIN_STAKE_RATIO = 25000000000000000; // 2.5% of Total Support = the minimum stake to start receiving funds
 
     function setUp() public {
         fluidProposals = new FluidProposals(
@@ -40,7 +40,7 @@ contract FluidProposalsTest is Test {
             superToken,
             DECAY,
             MAX_RATIO,
-            WEIGHT
+            MIN_STAKE_RATIO
         );
 
         // assign permission
@@ -54,30 +54,5 @@ contract FluidProposalsTest is Test {
         // labels
         vm.label(sender, "sender");
         vm.label(notAuthorized, "notAuthorizedAddress");
-    }
-
-    function testActivateProposal() public {
-        vm.prank(creator);
-        fluidProposals.activateProposal(2, sender);
-    }
-
-    function testActivateProposalAndSync() public {
-        vm.prank(creator);
-        fluidProposals.activateProposal(2, sender);
-        fluidProposals.sync();
-    }
-
-    function testDeactivateProposal() public {
-        vm.prank(creator);
-        fluidProposals.activateProposal(2, sender);
-        fluidProposals.deactivateProposal(2);
-    }
-
-    function testActivateTwoProposalsAndSync() public {
-        vm.startPrank(creator);
-        fluidProposals.activateProposal(2, sender);
-        fluidProposals.activateProposal(3, notAuthorized);
-        vm.stopPrank();
-        fluidProposals.sync();
     }
 }

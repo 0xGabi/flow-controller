@@ -7,7 +7,7 @@ import "../src/FluidProposals.sol";
 
 contract FluidProposalsScript is Script {
     // gnosis env
-    address cv = 0x16c87B344199C51119Ec7Df2364391C35895a7A4;
+    address cv = 0x0B21081C6F8b1990f53FC76279Cc41ba22D7AFE2;
     address superfluid = 0x0C7bfB0A57f3223b9Cf1d3C2ba2618481714A35D;
     address superToken = 0xc0712524B39323eb2437E69226b261d928629dC8;
 
