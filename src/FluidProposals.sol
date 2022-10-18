@@ -87,6 +87,12 @@ contract FluidProposals is Owned {
         emit FlowSettingsChanged(_decay, _maxRatio, _minStakeRatio);
     }
 
+    function removeProposals(uint256[] memory _proposalIds) public onlyOwner {
+        for (uint256 i = 0; i < _proposalIds.length; i++) {
+            _removeProposal(_proposalIds[i]);
+        }
+    }
+
     function registerProposal(uint256 _proposalId, address _beneficiary)
         public
     {
@@ -242,6 +248,9 @@ contract FluidProposals is Owned {
             ""
         );
 
+        Flow storage flow = flows[_proposalId];
+        flow.lastTime = block.timestamp;
+
         emit ProposalActivated(_proposalId);
     }
 
@@ -280,6 +289,10 @@ contract FluidProposals is Owned {
             int96(1),
             ""
         );
+
+        Flow storage flow = flows[_proposalId];
+        flow.lastTime = block.timestamp;
+
         emit ProposalActivated(_proposalId);
     }
 
