@@ -16,9 +16,14 @@ contract FluidProposals is Owned {
     // Shift to left to leave space for decimals
     int128 private constant ONE = 1 << 64;
 
-    struct Proposal {
+    struct Flow {
         uint256 lastRate;
         uint256 lastTime;
+    }
+
+    struct Proposal {
+        bool registered;
+        address beneficiary;
     }
 
     ConvictionVoting public cv;
@@ -29,17 +34,20 @@ contract FluidProposals is Owned {
     int128 public maxRatio;
     int128 public minStakeRatio;
 
-    mapping(uint256 => Proposal) internal proposals;
+    mapping(uint256 => Flow) internal flows;
+    mapping(uint256 => Proposal) internal registeredProposals;
+    mapping(address => bool) internal registeredBeneficiary;
     uint256[15] internal activeProposals;
-    address[15] internal beneficiaries;
 
     event FlowSettingsChanged(
         uint256 decay,
         uint256 maxRatio,
         uint256 minStakeRatio
     );
-    event ProposalActivated(uint256 indexed id, address beneficiary);
-    event ProposalDeactivated(uint256 indexed id);
+    event ProposalRegistered(uint256 indexed id, address beneficiary);
+    event ProposalActivated(uint256 indexed id);
+    event ProposalReplaced(uint256 indexed id);
+    event ProposalRemoved(uint256 indexed id);
     event FlowUpdated(
         uint256 indexed id,
         address indexed beneficiary,
@@ -50,8 +58,7 @@ contract FluidProposals is Owned {
     error ProposalOnlySignaling();
     error ProposalOnlySubmmiter();
     error ProposalAlreadyActive();
-    error ProposalBeneficiaryAlreadyUse();
-    error ProposalAlreadyInactive();
+    error ProposalAlreadyRemoved();
     error ProposalNeedsMoreStake();
 
     constructor(
@@ -80,16 +87,33 @@ contract FluidProposals is Owned {
         emit FlowSettingsChanged(_decay, _maxRatio, _minStakeRatio);
     }
 
-    function activateProposal(uint256 _proposalId, address _beneficiary)
+    function removeProposals(uint256[] memory _proposalIds) public onlyOwner {
+        for (uint256 i = 0; i < _proposalIds.length; i++) {
+            _removeProposal(_proposalIds[i]);
+        }
+    }
+
+    function registerProposals(
+        uint256[] memory _proposalIds,
+        address[] memory _addresses
+    ) public onlyOwner {
+        for (uint256 i = 0; i < _proposalIds.length; i++) {
+            _registerProposal(_proposalIds[i], _addresses[i]);
+        }
+    }
+
+    function registerProposal(uint256 _proposalId, address _beneficiary)
         public
     {
         require(_proposalId != 0);
         require(_beneficiary != address(0));
+        require(!registeredBeneficiary[_beneficiary]);
+
         (
             uint256 amount,
             ,
             ,
-            uint256 min,
+            ,
             ,
             ,
             ,
@@ -110,14 +134,19 @@ contract FluidProposals is Owned {
             revert ProposalOnlySubmmiter();
         }
 
+        _registerProposal(_proposalId, _beneficiary);
+    }
+
+    function activateProposal(uint256 _proposalId) public {
+        require(registeredProposals[_proposalId].registered);
+
+        (, , , uint256 min, , , , , , ) = cv.getProposal(_proposalId);
+
         uint256 minIndex = _proposalId;
 
         for (uint256 i = 0; i < activeProposals.length; i++) {
             if (activeProposals[i] == _proposalId) {
                 revert ProposalAlreadyActive();
-            }
-            if (beneficiaries[i] == _beneficiary) {
-                revert ProposalBeneficiaryAlreadyUse();
             }
             if (activeProposals[i] == 0) {
                 // If position i is empty, use it
@@ -139,14 +168,14 @@ contract FluidProposals is Owned {
         }
 
         if (activeProposals[minIndex] == 0) {
-            _activateProposal(minIndex, _proposalId, _beneficiary);
+            _activateProposal(minIndex, _proposalId);
             return;
         }
 
-        _replaceProposal(minIndex, _proposalId, _beneficiary);
+        _replaceProposal(minIndex, _proposalId);
     }
 
-    function deactivateProposal(uint256 _proposalId) public {
+    function removeProposal(uint256 _proposalId) public {
         require(_proposalId != 0);
         (, , , , , , , , address submmiter, ) = cv.getProposal(_proposalId);
 
@@ -156,19 +185,19 @@ contract FluidProposals is Owned {
 
         for (uint256 i = 0; i < activeProposals.length; i++) {
             if (activeProposals[i] == _proposalId) {
-                _deactivateProposal(i);
+                _removeProposal(i);
                 return;
             }
         }
 
-        revert ProposalAlreadyInactive();
+        revert ProposalAlreadyRemoved();
     }
 
     function sync() external {
         for (uint256 i = 0; i < activeProposals.length; i++) {
             uint256 _proposalId = activeProposals[i];
-            Proposal storage proposal = proposals[_proposalId];
-            if (proposal.lastTime == block.timestamp || _proposalId == 0) {
+            Flow storage flow = flows[_proposalId];
+            if (flow.lastTime == block.timestamp || _proposalId == 0) {
                 continue; // Empty or rates already updated
             }
 
@@ -177,71 +206,139 @@ contract FluidProposals is Owned {
                 _proposalId
             );
             if (status != ProposalStatus.Active) {
-                _deactivateProposal(_proposalId);
+                _removeProposal(_proposalId);
                 continue;
             }
 
             // calculateRate and store it
-            proposal.lastRate = getCurrentRate(_proposalId);
-            proposal.lastTime = block.timestamp;
+            flow.lastRate = getCurrentRate(_proposalId);
+            flow.lastTime = block.timestamp;
 
-            if (proposal.lastRate != 0) {
+            if (flow.lastRate != 0) {
                 // update flow
                 superfluid.updateFlow(
                     token,
-                    beneficiaries[i],
-                    int96(int256(proposal.lastRate)),
+                    registeredProposals[_proposalId].beneficiary,
+                    int96(int256(flow.lastRate)),
                     ""
                 );
 
                 emit FlowUpdated(
                     _proposalId,
-                    beneficiaries[i],
-                    proposal.lastRate
+                    registeredProposals[_proposalId].beneficiary,
+                    flow.lastRate
                 );
             }
         }
     }
 
-    function _activateProposal(
-        uint256 _proposalIndex,
-        uint256 _proposalId,
-        address _beneficiary
-    ) internal {
+    function _registerProposal(uint256 _proposalId, address _beneficiary)
+        internal
+    {
+        Proposal storage proposal = registeredProposals[_proposalId];
+        proposal.registered = true;
+        proposal.beneficiary = _beneficiary;
+
+        registeredBeneficiary[_beneficiary] = true;
+
+        emit ProposalRegistered(_proposalId, _beneficiary);
+    }
+
+    function _activateProposal(uint256 _proposalIndex, uint256 _proposalId)
+        internal
+    {
         require(activeProposals[_proposalIndex] == 0);
         activeProposals[_proposalIndex] = _proposalId;
-        beneficiaries[_proposalIndex] = _beneficiary;
         // Superfluid require initial flowRate > 0, so int96(1)
-        superfluid.createFlow(token, _beneficiary, int96(1), "");
-        emit ProposalActivated(_proposalId, _beneficiary);
+        superfluid.createFlow(
+            token,
+            registeredProposals[_proposalId].beneficiary,
+            int96(1),
+            ""
+        );
+
+        Flow storage flow = flows[_proposalId];
+        flow.lastTime = block.timestamp;
+
+        emit ProposalActivated(_proposalId);
     }
 
-    function _deactivateProposal(uint256 _proposalIndex) internal {
-        uint256 _proposalId = activeProposals[_proposalIndex];
-        address beneficiary = beneficiaries[_proposalIndex];
-        superfluid.deleteFlow(token, beneficiary);
-        emit ProposalDeactivated(_proposalId);
+    function _removeProposal(uint256 _proposalIndex) internal {
+        uint256 proposalId = activeProposals[_proposalIndex];
+        superfluid.deleteFlow(
+            token,
+            registeredProposals[proposalId].beneficiary
+        );
         activeProposals[_proposalIndex] = 0;
-        beneficiaries[_proposalIndex] = address(0);
+
+        registeredBeneficiary[
+            registeredProposals[proposalId].beneficiary
+        ] = false;
+
+        emit ProposalRemoved(proposalId);
     }
 
-    function _replaceProposal(
-        uint256 _proposalIndex,
-        uint256 _proposalId,
-        address _beneficiary
-    ) internal {
+    function _replaceProposal(uint256 _proposalIndex, uint256 _proposalId)
+        internal
+    {
         uint256 oldProposalId = activeProposals[_proposalIndex];
-        address oldBeneficiary = beneficiaries[_proposalIndex];
 
-        superfluid.deleteFlow(token, oldBeneficiary);
-        emit ProposalDeactivated(oldProposalId);
+        superfluid.deleteFlow(
+            token,
+            registeredProposals[oldProposalId].beneficiary
+        );
+        emit ProposalReplaced(oldProposalId);
 
         activeProposals[_proposalIndex] = _proposalId;
-        beneficiaries[_proposalIndex] = _beneficiary;
 
         // Require initial flowRate > 0
-        superfluid.createFlow(token, _beneficiary, int96(1), "");
-        emit ProposalActivated(_proposalId, _beneficiary);
+        superfluid.createFlow(
+            token,
+            registeredProposals[_proposalId].beneficiary,
+            int96(1),
+            ""
+        );
+
+        Flow storage flow = flows[_proposalId];
+        flow.lastTime = block.timestamp;
+
+        emit ProposalActivated(_proposalId);
+    }
+
+    function canActivateProposal(uint256 _proposalId)
+        public
+        view
+        returns (bool)
+    {
+        if (!registeredProposals[_proposalId].registered) {
+            return false;
+        }
+
+        (, , , uint256 min, , , , , , ) = cv.getProposal(_proposalId);
+
+        uint256 minIndex = _proposalId;
+
+        for (uint256 i = 0; i < activeProposals.length; i++) {
+            if (activeProposals[i] == _proposalId) {
+                // Proposal already active
+                return false;
+            }
+            if (activeProposals[i] == 0) {
+                // If position i is empty, use it
+                min = 0;
+                minIndex = i;
+                break;
+            }
+            (, , , uint256 _min, , , , , , ) = cv.getProposal(
+                activeProposals[i]
+            );
+            if (_min < min) {
+                min = _min;
+                minIndex = i;
+            }
+        }
+
+        return activeProposals[minIndex] != _proposalId;
     }
 
     function isActive(uint256 _proposalId) public view returns (bool) {
@@ -305,12 +402,12 @@ contract FluidProposals is Owned {
         view
         returns (uint256 _rate)
     {
-        Proposal storage proposal = proposals[_proposalId];
-        assert(proposal.lastTime <= block.timestamp);
+        Flow storage flow = flows[_proposalId];
+        assert(flow.lastTime <= block.timestamp);
         return
             _rate = calculateRate(
-                block.timestamp - proposal.lastTime, // we assert it doesn't overflow above
-                proposal.lastRate,
+                block.timestamp - flow.lastTime, // we assert it doesn't overflow above
+                flow.lastRate,
                 getTargetRate(_proposalId)
             );
     }
