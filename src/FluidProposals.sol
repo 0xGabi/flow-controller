@@ -93,6 +93,15 @@ contract FluidProposals is Owned {
         }
     }
 
+    function registerProposals(
+        uint256[] memory _proposalIds,
+        address[] memory _addresses
+    ) public onlyOwner {
+        for (uint256 i = 0; i < _proposalIds.length; i++) {
+            _registerProposal(_proposalIds[i], _addresses[i]);
+        }
+    }
+
     function registerProposal(uint256 _proposalId, address _beneficiary)
         public
     {
