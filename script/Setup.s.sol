@@ -10,10 +10,9 @@ import {FluidProposals} from "../src/FluidProposals.sol";
 contract SetupScript is UpgradeScripts {
     FluidProposals fluidProposals;
 
-    // gnosis env
-    address cv = 0x0B21081C6F8b1990f53FC76279Cc41ba22D7AFE2;
-    address superfluid = 0x0C7bfB0A57f3223b9Cf1d3C2ba2618481714A35D;
-    address superToken = 0xc0712524B39323eb2437E69226b261d928629dC8;
+    address cv = vm.envAddress("CONVICTION_VOTING_APP");
+    address superfluid = vm.envAddress("SUPERFLUID_APP");
+    address superToken = vm.envAddress("SUPER_TOKEN");
 
     // flow settings, check https://www.desmos.com/calculator/zce2ygj7bd for more details
     uint256 DECAY = 999999197747000000; // 10 days (864000 seconds) to reach 50% of targetRate, check https://www.desmos.com/calculator/twlx3u8e9u for mor details
@@ -60,7 +59,8 @@ contract SetupScript is UpgradeScripts {
     function integrationTest() internal view {
         require(fluidProposals.owner() == msg.sender);
 
-        // require(keccak256(abi.encode(nft.name())) == keccak256(abi.encode("My NFT")));
-        // require(keccak256(abi.encode(nft.symbol())) == keccak256(abi.encode("NFTX")));
+        require(keccak256(abi.encode(fluidProposals.cv())) == keccak256(abi.encode(cv)));
+        require(keccak256(abi.encode(fluidProposals.superfluid())) == keccak256(abi.encode(superfluid)));
+        require(keccak256(abi.encode(fluidProposals.token())) == keccak256(abi.encode(superToken)));
     }
 }
