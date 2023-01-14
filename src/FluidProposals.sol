@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
-import {ERC20} from "./solmate/ERC20.sol";
-import {Owned} from "./solmate/Owned.sol";
+import {PausableUpgradeable} from "@oz-upgradeable/security/PausableUpgradeable.sol";
+import {OwnableUpgradeable} from "@oz-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@oz-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 import {ConvictionVoting, ProposalStatus} from "./interfaces/IConvictionVoting.sol";
 import {FundsManager} from "./interfaces/IFundsManager.sol";
 import {Superfluid} from "./interfaces/ISuperfluid.sol";
 import {SuperToken} from "./interfaces/ISuperToken.sol";
+
 import {ABDKMath64x64} from "./libraries/ABDKMath64x64.sol";
 
-contract FluidProposals is Owned {
+contract FluidProposals is Initializable, PausableUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
     using ABDKMath64x64 for int128;
     using ABDKMath64x64 for uint256;
+
+    uint256 public immutable version;
 
     // Shift to left to leave space for decimals
     int128 private constant ONE = 1 << 64;
@@ -39,20 +45,12 @@ contract FluidProposals is Owned {
     mapping(address => bool) internal registeredBeneficiary;
     uint256[15] internal activeProposals;
 
-    event FlowSettingsChanged(
-        uint256 decay,
-        uint256 maxRatio,
-        uint256 minStakeRatio
-    );
+    event FlowSettingsChanged(uint256 decay, uint256 maxRatio, uint256 minStakeRatio);
     event ProposalRegistered(uint256 indexed id, address beneficiary);
     event ProposalActivated(uint256 indexed id);
     event ProposalReplaced(uint256 indexed id);
     event ProposalRemoved(uint256 indexed id);
-    event FlowUpdated(
-        uint256 indexed id,
-        address indexed beneficiary,
-        uint256 rate
-    );
+    event FlowUpdated(uint256 indexed id, address indexed beneficiary, uint256 rate);
 
     error ProposalOnlyActive();
     error ProposalOnlySignaling();
@@ -61,25 +59,45 @@ contract FluidProposals is Owned {
     error ProposalAlreadyRemoved();
     error ProposalNeedsMoreStake();
 
-    constructor(
+    // @custom:oz-upgrades-unsafe-allow constructor
+    constructor(uint256 version_) {
+        version = version_;
+        _disableInitializers();
+    }
+
+    function initialize(
         address _cv,
         address _superfluid,
         address _token,
         uint256 _decay,
         uint256 _maxRatio,
         uint256 _minStakeRatio
-    ) Owned(msg.sender) {
+    ) public initializer {
+        __Pausable_init();
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+
         cv = ConvictionVoting(_cv);
         superfluid = Superfluid(_superfluid);
         token = SuperToken(_token);
         setFlowSettings(_decay, _maxRatio, _minStakeRatio);
     }
 
-    function setFlowSettings(
-        uint256 _decay,
-        uint256 _maxRatio,
-        uint256 _minStakeRatio
-    ) public onlyOwner {
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
+    function getImplementation() external view returns (address) {
+        return _getImplementation();
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    function setFlowSettings(uint256 _decay, uint256 _maxRatio, uint256 _minStakeRatio) public onlyOwner {
         decay = _decay.divu(1e18).add(1);
         maxRatio = _maxRatio.divu(1e18).add(1);
         minStakeRatio = _minStakeRatio.divu(1e18).add(1);
@@ -93,34 +111,18 @@ contract FluidProposals is Owned {
         }
     }
 
-    function registerProposals(
-        uint256[] memory _proposalIds,
-        address[] memory _addresses
-    ) public onlyOwner {
+    function registerProposals(uint256[] memory _proposalIds, address[] memory _addresses) public onlyOwner {
         for (uint256 i = 0; i < _proposalIds.length; i++) {
             _registerProposal(_proposalIds[i], _addresses[i]);
         }
     }
 
-    function registerProposal(uint256 _proposalId, address _beneficiary)
-        public
-    {
+    function registerProposal(uint256 _proposalId, address _beneficiary) public {
         require(_proposalId != 0);
         require(_beneficiary != address(0));
         require(!registeredBeneficiary[_beneficiary]);
 
-        (
-            uint256 amount,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ProposalStatus status,
-            address submmiter,
-
-        ) = cv.getProposal(_proposalId);
+        (uint256 amount,,,,,,, ProposalStatus status, address submmiter,) = cv.getProposal(_proposalId);
 
         if (status != ProposalStatus.Active) {
             revert ProposalOnlyActive();
@@ -140,7 +142,7 @@ contract FluidProposals is Owned {
     function activateProposal(uint256 _proposalId) public {
         require(registeredProposals[_proposalId].registered);
 
-        (, , , uint256 min, , , , , , ) = cv.getProposal(_proposalId);
+        (,,, uint256 min,,,,,,) = cv.getProposal(_proposalId);
 
         uint256 minIndex = _proposalId;
 
@@ -154,9 +156,7 @@ contract FluidProposals is Owned {
                 minIndex = i;
                 break;
             }
-            (, , , uint256 _min, , , , , , ) = cv.getProposal(
-                activeProposals[i]
-            );
+            (,,, uint256 _min,,,,,,) = cv.getProposal(activeProposals[i]);
             if (_min < min) {
                 min = _min;
                 minIndex = i;
@@ -177,7 +177,7 @@ contract FluidProposals is Owned {
 
     function removeProposal(uint256 _proposalId) public {
         require(_proposalId != 0);
-        (, , , , , , , , address submmiter, ) = cv.getProposal(_proposalId);
+        (,,,,,,,, address submmiter,) = cv.getProposal(_proposalId);
 
         if (msg.sender != submmiter) {
             revert ProposalOnlySubmmiter();
@@ -202,9 +202,7 @@ contract FluidProposals is Owned {
             }
 
             // Check still an active proposal
-            (, , , , , , , ProposalStatus status, , ) = cv.getProposal(
-                _proposalId
-            );
+            (,,,,,,, ProposalStatus status,,) = cv.getProposal(_proposalId);
             if (status != ProposalStatus.Active) {
                 _removeProposal(_proposalId);
                 continue;
@@ -217,24 +215,15 @@ contract FluidProposals is Owned {
             if (flow.lastRate != 0) {
                 // update flow
                 superfluid.updateFlow(
-                    token,
-                    registeredProposals[_proposalId].beneficiary,
-                    int96(int256(flow.lastRate)),
-                    ""
+                    token, registeredProposals[_proposalId].beneficiary, int96(int256(flow.lastRate)), ""
                 );
 
-                emit FlowUpdated(
-                    _proposalId,
-                    registeredProposals[_proposalId].beneficiary,
-                    flow.lastRate
-                );
+                emit FlowUpdated(_proposalId, registeredProposals[_proposalId].beneficiary, flow.lastRate);
             }
         }
     }
 
-    function _registerProposal(uint256 _proposalId, address _beneficiary)
-        internal
-    {
+    function _registerProposal(uint256 _proposalId, address _beneficiary) internal {
         Proposal storage proposal = registeredProposals[_proposalId];
         proposal.registered = true;
         proposal.beneficiary = _beneficiary;
@@ -244,18 +233,11 @@ contract FluidProposals is Owned {
         emit ProposalRegistered(_proposalId, _beneficiary);
     }
 
-    function _activateProposal(uint256 _proposalIndex, uint256 _proposalId)
-        internal
-    {
+    function _activateProposal(uint256 _proposalIndex, uint256 _proposalId) internal {
         require(activeProposals[_proposalIndex] == 0);
         activeProposals[_proposalIndex] = _proposalId;
         // Superfluid require initial flowRate > 0, so int96(1)
-        superfluid.createFlow(
-            token,
-            registeredProposals[_proposalId].beneficiary,
-            int96(1),
-            ""
-        );
+        superfluid.createFlow(token, registeredProposals[_proposalId].beneficiary, int96(1), "");
 
         Flow storage flow = flows[_proposalId];
         flow.lastTime = block.timestamp;
@@ -265,39 +247,24 @@ contract FluidProposals is Owned {
 
     function _removeProposal(uint256 _proposalIndex) internal {
         uint256 proposalId = activeProposals[_proposalIndex];
-        superfluid.deleteFlow(
-            token,
-            registeredProposals[proposalId].beneficiary
-        );
+        superfluid.deleteFlow(token, registeredProposals[proposalId].beneficiary);
         activeProposals[_proposalIndex] = 0;
 
-        registeredBeneficiary[
-            registeredProposals[proposalId].beneficiary
-        ] = false;
+        registeredBeneficiary[registeredProposals[proposalId].beneficiary] = false;
 
         emit ProposalRemoved(proposalId);
     }
 
-    function _replaceProposal(uint256 _proposalIndex, uint256 _proposalId)
-        internal
-    {
+    function _replaceProposal(uint256 _proposalIndex, uint256 _proposalId) internal {
         uint256 oldProposalId = activeProposals[_proposalIndex];
 
-        superfluid.deleteFlow(
-            token,
-            registeredProposals[oldProposalId].beneficiary
-        );
+        superfluid.deleteFlow(token, registeredProposals[oldProposalId].beneficiary);
         emit ProposalReplaced(oldProposalId);
 
         activeProposals[_proposalIndex] = _proposalId;
 
         // Require initial flowRate > 0
-        superfluid.createFlow(
-            token,
-            registeredProposals[_proposalId].beneficiary,
-            int96(1),
-            ""
-        );
+        superfluid.createFlow(token, registeredProposals[_proposalId].beneficiary, int96(1), "");
 
         Flow storage flow = flows[_proposalId];
         flow.lastTime = block.timestamp;
@@ -305,16 +272,12 @@ contract FluidProposals is Owned {
         emit ProposalActivated(_proposalId);
     }
 
-    function canActivateProposal(uint256 _proposalId)
-        public
-        view
-        returns (bool)
-    {
+    function canActivateProposal(uint256 _proposalId) public view returns (bool) {
         if (!registeredProposals[_proposalId].registered) {
             return false;
         }
 
-        (, , , uint256 min, , , , , , ) = cv.getProposal(_proposalId);
+        (,,, uint256 min,,,,,,) = cv.getProposal(_proposalId);
 
         uint256 minIndex = _proposalId;
 
@@ -329,9 +292,7 @@ contract FluidProposals is Owned {
                 minIndex = i;
                 break;
             }
-            (, , , uint256 _min, , , , , , ) = cv.getProposal(
-                activeProposals[i]
-            );
+            (,,, uint256 _min,,,,,,) = cv.getProposal(activeProposals[i]);
             if (_min < min) {
                 min = _min;
                 minIndex = i;
@@ -357,29 +318,20 @@ contract FluidProposals is Owned {
     /**
      * @dev targetRate = (1 - sqrt(minStake / min(staked, minStake))) * maxRatio * funds
      */
-    function calculateTargetRate(uint256 _stake)
-        public
-        view
-        returns (uint256 _targetRate)
-    {
+    function calculateTargetRate(uint256 _stake) public view returns (uint256 _targetRate) {
         if (_stake == 0) {
             _targetRate = 0;
         } else {
             // The old CV that 1Hive uses have a vault reference instead of fundsManager
             uint256 funds = FundsManager(cv.vault()).balance(cv.requestToken());
             uint256 _minStake = minStake();
-            _targetRate = (
-                ONE.sub(
-                    _minStake
-                        .divu(_stake > _minStake ? _stake : _minStake)
-                        .sqrt()
-                )
-            ).mulu(maxRatio.mulu(funds));
+            _targetRate =
+                (ONE.sub(_minStake.divu(_stake > _minStake ? _stake : _minStake).sqrt())).mulu(maxRatio.mulu(funds));
         }
     }
 
     function getTargetRate(uint256 _proposalId) public view returns (uint256) {
-        (, , , uint256 stakedTokens, , , , , , ) = cv.getProposal(_proposalId);
+        (,,, uint256 stakedTokens,,,,,,) = cv.getProposal(_proposalId);
 
         return calculateTargetRate(stakedTokens);
     }
@@ -388,27 +340,18 @@ contract FluidProposals is Owned {
      * @notice Get current
      * @dev rate = (alpha ^ time * lastRate + _targetRate * (1 - alpha ^ time)
      */
-    function calculateRate(
-        uint256 _timePassed,
-        uint256 _lastRate,
-        uint256 _targetRate
-    ) public view returns (uint256) {
+    function calculateRate(uint256 _timePassed, uint256 _lastRate, uint256 _targetRate) public view returns (uint256) {
         int128 at = decay.pow(_timePassed);
         return at.mulu(_lastRate) + (ONE.sub(at).mulu(_targetRate)); // No need to check overflow on solidity >=0.8.0
     }
 
-    function getCurrentRate(uint256 _proposalId)
-        public
-        view
-        returns (uint256 _rate)
-    {
+    function getCurrentRate(uint256 _proposalId) public view returns (uint256 _rate) {
         Flow storage flow = flows[_proposalId];
         assert(flow.lastTime <= block.timestamp);
-        return
-            _rate = calculateRate(
-                block.timestamp - flow.lastTime, // we assert it doesn't overflow above
-                flow.lastRate,
-                getTargetRate(_proposalId)
-            );
+        return _rate = calculateRate(
+            block.timestamp - flow.lastTime, // we assert it doesn't overflow above
+            flow.lastRate,
+            getTargetRate(_proposalId)
+        );
     }
 }
