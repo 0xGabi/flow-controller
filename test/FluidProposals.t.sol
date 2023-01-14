@@ -11,6 +11,7 @@ import "./interfaces/IACL.sol";
 contract FluidProposalsTest is Test {
     using ABDKMath64x64 for int128;
     using ABDKMath64x64 for uint256;
+
     FluidProposals fluidProposals;
 
     // accounts
@@ -25,8 +26,7 @@ contract FluidProposalsTest is Test {
     address superToken = 0xc0712524B39323eb2437E69226b261d928629dC8;
 
     IACL acl = IACL(0x5164aE80218773F06a5455585ef31781453AEc4C);
-    bytes32 constant MANAGE_STREAMS_ROLE =
-        0x56c3496db27efc6d83ab1a24218f016191aab8835d442bc0fa8502f327132cbe;
+    bytes32 constant MANAGE_STREAMS_ROLE = 0x56c3496db27efc6d83ab1a24218f016191aab8835d442bc0fa8502f327132cbe;
 
     // flow settings, check https://www.desmos.com/calculator/zce2ygj7bd for more details
     uint256 DECAY = 999999197747000000; // 10 days (864000 seconds) to reach 50% of targetRate, check https://www.desmos.com/calculator/twlx3u8e9u for mor details
@@ -45,11 +45,7 @@ contract FluidProposalsTest is Test {
 
         // assign permission
         vm.prank(voting);
-        acl.grantPermission(
-            address(fluidProposals),
-            superfluid,
-            MANAGE_STREAMS_ROLE
-        );
+        acl.grantPermission(address(fluidProposals), superfluid, MANAGE_STREAMS_ROLE);
 
         // labels
         vm.label(sender, "sender");

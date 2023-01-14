@@ -7,10 +7,6 @@ contract ISuperfluidToken {
     function realtimeBalanceOf(address account, uint256 timestamp)
         public
         view
-        returns (
-            int256 availableBalance,
-            uint256 deposit,
-            uint256 owedDeposit
-        )
+        returns (int256 availableBalance, uint256 deposit, uint256 owedDeposit)
     {}
 }
