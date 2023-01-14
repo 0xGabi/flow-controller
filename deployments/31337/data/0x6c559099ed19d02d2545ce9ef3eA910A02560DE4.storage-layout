@@ -1,0 +1,283 @@
+{
+  "storage": [
+    {
+      "astId": 26745,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "_initialized",
+      "offset": 0,
+      "slot": "0",
+      "type": "t_uint8"
+    },
+    {
+      "astId": 26748,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "_initializing",
+      "offset": 1,
+      "slot": "0",
+      "type": "t_bool"
+    },
+    {
+      "astId": 27495,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "__gap",
+      "offset": 0,
+      "slot": "1",
+      "type": "t_array(t_uint256)50_storage"
+    },
+    {
+      "astId": 27064,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "_paused",
+      "offset": 0,
+      "slot": "51",
+      "type": "t_bool"
+    },
+    {
+      "astId": 27169,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "__gap",
+      "offset": 0,
+      "slot": "52",
+      "type": "t_array(t_uint256)49_storage"
+    },
+    {
+      "astId": 26228,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "_owner",
+      "offset": 0,
+      "slot": "101",
+      "type": "t_address"
+    },
+    {
+      "astId": 26348,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "__gap",
+      "offset": 0,
+      "slot": "102",
+      "type": "t_array(t_uint256)49_storage"
+    },
+    {
+      "astId": 26727,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "__gap",
+      "offset": 0,
+      "slot": "151",
+      "type": "t_array(t_uint256)50_storage"
+    },
+    {
+      "astId": 27042,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "__gap",
+      "offset": 0,
+      "slot": "201",
+      "type": "t_array(t_uint256)50_storage"
+    },
+    {
+      "astId": 32138,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "cv",
+      "offset": 0,
+      "slot": "251",
+      "type": "t_contract(ConvictionVoting)33313"
+    },
+    {
+      "astId": 32141,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "superfluid",
+      "offset": 0,
+      "slot": "252",
+      "type": "t_contract(Superfluid)33449"
+    },
+    {
+      "astId": 32144,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "token",
+      "offset": 0,
+      "slot": "253",
+      "type": "t_contract(SuperToken)33410"
+    },
+    {
+      "astId": 32146,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "decay",
+      "offset": 0,
+      "slot": "254",
+      "type": "t_int128"
+    },
+    {
+      "astId": 32148,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "maxRatio",
+      "offset": 16,
+      "slot": "254",
+      "type": "t_int128"
+    },
+    {
+      "astId": 32150,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "minStakeRatio",
+      "offset": 0,
+      "slot": "255",
+      "type": "t_int128"
+    },
+    {
+      "astId": 32155,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "flows",
+      "offset": 0,
+      "slot": "256",
+      "type": "t_mapping(t_uint256,t_struct(Flow)32130_storage)"
+    },
+    {
+      "astId": 32160,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "registeredProposals",
+      "offset": 0,
+      "slot": "257",
+      "type": "t_mapping(t_uint256,t_struct(Proposal)32135_storage)"
+    },
+    {
+      "astId": 32164,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "registeredBeneficiary",
+      "offset": 0,
+      "slot": "258",
+      "type": "t_mapping(t_address,t_bool)"
+    },
+    {
+      "astId": 32168,
+      "contract": "src/FluidProposals.sol:FluidProposals",
+      "label": "activeProposals",
+      "offset": 0,
+      "slot": "259",
+      "type": "t_array(t_uint256)15_storage"
+    }
+  ],
+  "types": {
+    "t_address": {
+      "encoding": "inplace",
+      "label": "address",
+      "numberOfBytes": "20"
+    },
+    "t_array(t_uint256)15_storage": {
+      "encoding": "inplace",
+      "label": "uint256[15]",
+      "numberOfBytes": "480",
+      "base": "t_uint256"
+    },
+    "t_array(t_uint256)49_storage": {
+      "encoding": "inplace",
+      "label": "uint256[49]",
+      "numberOfBytes": "1568",
+      "base": "t_uint256"
+    },
+    "t_array(t_uint256)50_storage": {
+      "encoding": "inplace",
+      "label": "uint256[50]",
+      "numberOfBytes": "1600",
+      "base": "t_uint256"
+    },
+    "t_bool": {
+      "encoding": "inplace",
+      "label": "bool",
+      "numberOfBytes": "1"
+    },
+    "t_contract(ConvictionVoting)33313": {
+      "encoding": "inplace",
+      "label": "contract ConvictionVoting",
+      "numberOfBytes": "20"
+    },
+    "t_contract(SuperToken)33410": {
+      "encoding": "inplace",
+      "label": "contract SuperToken",
+      "numberOfBytes": "20"
+    },
+    "t_contract(Superfluid)33449": {
+      "encoding": "inplace",
+      "label": "contract Superfluid",
+      "numberOfBytes": "20"
+    },
+    "t_int128": {
+      "encoding": "inplace",
+      "label": "int128",
+      "numberOfBytes": "16"
+    },
+    "t_mapping(t_address,t_bool)": {
+      "encoding": "mapping",
+      "key": "t_address",
+      "label": "mapping(address => bool)",
+      "numberOfBytes": "32",
+      "value": "t_bool"
+    },
+    "t_mapping(t_uint256,t_struct(Flow)32130_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => struct FluidProposals.Flow)",
+      "numberOfBytes": "32",
+      "value": "t_struct(Flow)32130_storage"
+    },
+    "t_mapping(t_uint256,t_struct(Proposal)32135_storage)": {
+      "encoding": "mapping",
+      "key": "t_uint256",
+      "label": "mapping(uint256 => struct FluidProposals.Proposal)",
+      "numberOfBytes": "32",
+      "value": "t_struct(Proposal)32135_storage"
+    },
+    "t_struct(Flow)32130_storage": {
+      "encoding": "inplace",
+      "label": "struct FluidProposals.Flow",
+      "numberOfBytes": "64",
+      "members": [
+        {
+          "astId": 32127,
+          "contract": "src/FluidProposals.sol:FluidProposals",
+          "label": "lastRate",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_uint256"
+        },
+        {
+          "astId": 32129,
+          "contract": "src/FluidProposals.sol:FluidProposals",
+          "label": "lastTime",
+          "offset": 0,
+          "slot": "1",
+          "type": "t_uint256"
+        }
+      ]
+    },
+    "t_struct(Proposal)32135_storage": {
+      "encoding": "inplace",
+      "label": "struct FluidProposals.Proposal",
+      "numberOfBytes": "32",
+      "members": [
+        {
+          "astId": 32132,
+          "contract": "src/FluidProposals.sol:FluidProposals",
+          "label": "registered",
+          "offset": 0,
+          "slot": "0",
+          "type": "t_bool"
+        },
+        {
+          "astId": 32134,
+          "contract": "src/FluidProposals.sol:FluidProposals",
+          "label": "beneficiary",
+          "offset": 1,
+          "slot": "0",
+          "type": "t_address"
+        }
+      ]
+    },
+    "t_uint256": {
+      "encoding": "inplace",
+      "label": "uint256",
+      "numberOfBytes": "32"
+    },
+    "t_uint8": {
+      "encoding": "inplace",
+      "label": "uint8",
+      "numberOfBytes": "1"
+    }
+  }
+}

@@ -15,8 +15,7 @@ contract TokenManagerHook is ReentrancyGuard {
     /* Hardcoded constants to save gas
     bytes32 public constant TOKEN_MANAGER_POSITION = keccak256("hookedTokenManager.tokenManagerHook.tokenManager");
     */
-    bytes32 private constant TOKEN_MANAGER_POSITION =
-        0x5c513b2347f66d33af9d68f4a0ed7fbb73ce364889b2af7f3ee5764440da6a8a;
+    bytes32 private constant TOKEN_MANAGER_POSITION = 0x5c513b2347f66d33af9d68f4a0ed7fbb73ce364889b2af7f3ee5764440da6a8a;
 
     modifier onlyTokenManager() {
         require(getTokenManager() == msg.sender, "Hooks must be called from Token Manager");
@@ -55,11 +54,12 @@ contract TokenManagerHook is ReentrancyGuard {
      * @param _to The destination of the transfer
      * @param _amount The amount of the transfer
      */
-    function onTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external onlyTokenManager nonReentrant returns (bool) {
+    function onTransfer(address _from, address _to, uint256 _amount)
+        external
+        onlyTokenManager
+        nonReentrant
+        returns (bool)
+    {
         return _onTransfer(_from, _to, _amount);
     }
 
@@ -71,45 +71,30 @@ contract TokenManagerHook is ReentrancyGuard {
      * @param _spender The account that is allowed to spend
      * @param _amount The amount being allowed
      */
-    function onApprove(
-        address _holder,
-        address _spender,
-        uint256 _amount
-    ) external onlyTokenManager nonReentrant returns (bool) {
+    function onApprove(address _holder, address _spender, uint256 _amount)
+        external
+        onlyTokenManager
+        nonReentrant
+        returns (bool)
+    {
         return _onApprove(_holder, _spender, _amount);
     }
 
     // Function to override if necessary:
 
-    function _onRegisterAsHook(
-        address,
-        uint256,
-        address
-    ) internal virtual {
+    function _onRegisterAsHook(address, uint256, address) internal virtual {
         return;
     }
 
-    function _onRevokeAsHook(
-        address,
-        uint256,
-        address
-    ) internal virtual {
+    function _onRevokeAsHook(address, uint256, address) internal virtual {
         return;
     }
 
-    function _onTransfer(
-        address,
-        address,
-        uint256
-    ) internal virtual returns (bool) {
+    function _onTransfer(address, address, uint256) internal virtual returns (bool) {
         return true;
     }
 
-    function _onApprove(
-        address,
-        address,
-        uint256
-    ) internal virtual returns (bool) {
+    function _onApprove(address, address, uint256) internal virtual returns (bool) {
         return true;
     }
 }
