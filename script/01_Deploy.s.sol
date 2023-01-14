@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import {SetupScript} from "./Setup.s.sol";
+import {SetupScript} from "src/SetupScript.sol";
 
 /* 
 # Anvil Dry-Run (make sure it is running):

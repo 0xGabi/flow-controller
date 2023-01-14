@@ -5,7 +5,7 @@ import {UpgradeScripts} from "upgrade-scripts/UpgradeScripts.sol";
 import {ERC1967Proxy} from "@oz/proxy/ERC1967/ERC1967Proxy.sol";
 import {UUPSUpgradeable} from "@oz/proxy/utils/UUPSUpgradeable.sol";
 
-import {FluidProposals} from "../src/FluidProposals.sol";
+import {FluidProposals} from "./FluidProposals.sol";
 
 contract SetupScript is UpgradeScripts {
     FluidProposals fluidProposals;
