@@ -35,14 +35,14 @@ contract SetupScript is UpgradeScripts {
         UUPSUpgradeable(proxy).upgradeTo(newImplementation);
     }
 
-    /// @dev override using forge's built-in create2 deployer (only works for specific chains, or: use your own!)
-    function deployCode(bytes memory code) internal override returns (address addr) {
-        uint256 salt = 0x1234;
+    // /// @dev override using forge's built-in create2 deployer (only works for specific chains, or: use your own!)
+    // function deployCode(bytes memory code) internal override returns (address addr) {
+    //     uint256 salt = 0x1234;
 
-        assembly {
-            addr := create2(0, add(code, 0x20), mload(code), salt)
-        }
-    }
+    //     assembly {
+    //         addr := create2(0, add(code, 0x20), mload(code), salt)
+    //     }
+    // }
 
     function setUpContracts() internal {
         // encodes constructor call
