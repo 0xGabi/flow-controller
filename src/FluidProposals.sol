@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {PausableUpgradeable} from "@oz-upgradeable/security/PausableUpgradeable.sol";
 import {OwnableUpgradeable} from "@oz-upgradeable/access/OwnableUpgradeable.sol";
 import {Initializable} from "@oz-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -13,7 +12,7 @@ import {SuperToken} from "./interfaces/ISuperToken.sol";
 
 import {ABDKMath64x64} from "./libraries/ABDKMath64x64.sol";
 
-contract FluidProposals is Initializable, PausableUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
+contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     using ABDKMath64x64 for int128;
     using ABDKMath64x64 for uint256;
 
@@ -73,7 +72,6 @@ contract FluidProposals is Initializable, PausableUpgradeable, OwnableUpgradeabl
         uint256 _maxRatio,
         uint256 _minStakeRatio
     ) public initializer {
-        __Pausable_init();
         __Ownable_init();
         __UUPSUpgradeable_init();
 
@@ -83,15 +81,7 @@ contract FluidProposals is Initializable, PausableUpgradeable, OwnableUpgradeabl
         setFlowSettings(_decay, _maxRatio, _minStakeRatio);
     }
 
-    function pause() public onlyOwner {
-        _pause();
-    }
-
-    function unpause() public onlyOwner {
-        _unpause();
-    }
-
-    function getImplementation() external view returns (address) {
+    function implementation() external view returns (address) {
         return _getImplementation();
     }
 
