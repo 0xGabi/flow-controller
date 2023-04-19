@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
-import {ERC20} from "./solmate/ERC20.sol";
-import {Owned} from "./solmate/Owned.sol";
+import {OwnableUpgradeable} from "@oz-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@oz-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@oz-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 import {ConvictionVoting, ProposalStatus} from "./interfaces/IConvictionVoting.sol";
 import {FundsManager} from "./interfaces/IFundsManager.sol";
 import {Superfluid} from "./interfaces/ISuperfluid.sol";
 import {SuperToken} from "./interfaces/ISuperToken.sol";
+
 import {ABDKMath64x64} from "./libraries/ABDKMath64x64.sol";
 
-contract FluidProposals is Owned {
+contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     using ABDKMath64x64 for int128;
     using ABDKMath64x64 for uint256;
+
+    uint256 public immutable version;
 
     // Shift to left to leave space for decimals
     int128 private constant ONE = 1 << 64;
@@ -53,19 +58,34 @@ contract FluidProposals is Owned {
     error ProposalAlreadyRemoved();
     error ProposalNeedsMoreStake();
 
-    constructor(
+    // @custom:oz-upgrades-unsafe-allow constructor
+    constructor(uint256 version_) {
+        version = version_;
+        _disableInitializers();
+    }
+
+    function initialize(
         address _cv,
         address _superfluid,
         address _token,
         uint256 _decay,
         uint256 _maxRatio,
         uint256 _minStakeRatio
-    ) Owned(msg.sender) {
+    ) public initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+
         cv = ConvictionVoting(_cv);
         superfluid = Superfluid(_superfluid);
         token = SuperToken(_token);
         setFlowSettings(_decay, _maxRatio, _minStakeRatio);
     }
+
+    function implementation() external view returns (address) {
+        return _getImplementation();
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function setFlowSettings(uint256 _decay, uint256 _maxRatio, uint256 _minStakeRatio) public onlyOwner {
         decay = _decay.divu(1e18).add(1);

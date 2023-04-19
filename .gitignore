@@ -7,6 +7,9 @@ out/
 /broadcast/**/*.json
 /broadcast/*/31337/
 
+!/deployments
+/deployments/31337/
+
 !/broadcast/FluidProposals.s.sol/100/run-latest.json
 
 .env
