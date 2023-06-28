@@ -3,3 +3,4 @@ ds-test/=lib/forge-std/lib/ds-test/src/
 @oz-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @oz/=lib/openzeppelin-contracts/contracts/
 upgrade-scripts/=lib/upgrade-scripts/src/
+UDS/=lib/upgrade-scripts/lib/UDS/src/

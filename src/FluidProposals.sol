@@ -194,7 +194,7 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             // Check still an active proposal
             (,,,,,,, ProposalStatus status,,) = cv.getProposal(_proposalId);
             if (status != ProposalStatus.Active) {
-                _removeProposal(_proposalId);
+                _removeProposal(i);
                 continue;
             }
 
