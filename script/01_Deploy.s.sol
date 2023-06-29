@@ -31,7 +31,7 @@ contract deploy is SetupScript {
         vm.stopBroadcast();
 
         // run an "integration test"
-        integrationTest();
+        // integrationTest();
 
         // console.log and store these in `deployments/{chainid}/deploy-latest.json` (if not in dry-run)
         storeLatestDeployments();

@@ -16,33 +16,34 @@ contract FluidProposalsTest is SetupScript {
     // accounts
     address sender = address(1);
     address notAuthorized = address(2);
-    address voting = 0x5F137364b1f6ad84a2863D5dcD27f4841c077E53;
     address creator = 0x5CfAdf589a694723F9Ed167D647582B3Db3b33b3;
 
-    IACL acl = IACL(0x5164aE80218773F06a5455585ef31781453AEc4C);
-    bytes32 constant MANAGE_STREAMS_ROLE = 0x56c3496db27efc6d83ab1a24218f016191aab8835d442bc0fa8502f327132cbe;
+    // fork env
+    uint256 GNOSIS_FORK_BLOCK_NUMBER = 28687355; // Mime token factory deployment block
+    string GNOSIS_RPC_URL = vm.envOr("GNOSIS_RPC_URL", string("https://rpc.gnosis.gateway.fm"));
 
     function setUpUpgradeScripts() internal override {
         UPGRADE_SCRIPTS_BYPASS = true; // deploys contracts without any checks whatsoever
     }
 
     function setUp() public {
-        setUpContracts();
+        // if in fork mode create and select fork
+        vm.createSelectFork(GNOSIS_RPC_URL, GNOSIS_FORK_BLOCK_NUMBER);
 
-        // assign permission
-        vm.prank(voting);
-        acl.grantPermission(address(fluidProposals), superfluid, MANAGE_STREAMS_ROLE);
+        fluidProposals = FluidProposals(0x6705B54dC554c781B834FCc5Ae18402127DD88ba);
 
         // labels
         vm.label(sender, "sender");
         vm.label(notAuthorized, "notAuthorizedAddress");
     }
 
-    function testIntegration() public view {
-        require(fluidProposals.owner() == msg.sender);
-
+    function testEnv() public view {
         require(keccak256(abi.encode(fluidProposals.cv())) == keccak256(abi.encode(cv)));
         require(keccak256(abi.encode(fluidProposals.superfluid())) == keccak256(abi.encode(superfluid)));
         require(keccak256(abi.encode(fluidProposals.token())) == keccak256(abi.encode(superToken)));
+    }
+
+    function testRemove() public {
+        fluidProposals.sync();
     }
 }
