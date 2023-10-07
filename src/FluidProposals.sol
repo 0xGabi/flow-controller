@@ -18,6 +18,8 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     uint256 public immutable version;
 
+    uint256 private constant SUPERTOKEN_WRAP_AMOUNT = 200 ether;
+
     // Shift to left to leave space for decimals
     int128 private constant ONE = 1 << 64;
 
@@ -93,6 +95,16 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         minStakeRatio = _minStakeRatio.divu(1e18).add(1);
 
         emit FlowSettingsChanged(_decay, _maxRatio, _minStakeRatio);
+    }
+
+    function syncSupertoken() public onlyOwner {
+        uint256 superTokenPoolBalance = token.balanceOf(cv.vault());
+        uint256 tokenPoolBalance = FundsManager(cv.vault()).balance(cv.requestToken());
+        
+        // we never have more than 5% of the pool in superToken
+        require(superTokenPoolBalance <= tokenPoolBalance / 20);
+       
+        superfluid.upgrade(token, SUPERTOKEN_WRAP_AMOUNT);
     }
 
     function removeProposals(uint256[] memory _proposalIds) public onlyOwner {
