@@ -102,7 +102,7 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 tokenPoolBalance = FundsManager(cv.vault()).balance(cv.requestToken());
         
         // we never have more than 5% of the pool in superToken
-        require(superTokenPoolBalance <= tokenPoolBalance / 20);
+        require(superTokenPoolBalance <= tokenPoolBalance / 20, "SuperToken pool balance above 5% ceiling");
        
         superfluid.upgrade(token, SUPERTOKEN_WRAP_AMOUNT);
     }
