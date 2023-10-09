@@ -18,8 +18,6 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     uint256 public immutable version;
 
-    uint256 private constant SUPERTOKEN_WRAP_AMOUNT = 200 ether;
-
     // Shift to left to leave space for decimals
     int128 private constant ONE = 1 << 64;
 
@@ -36,6 +34,9 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     ConvictionVoting public cv;
     Superfluid public superfluid;
     SuperToken public token;
+
+    uint256 public wrapAmount;
+    uint256 public ceilingPct;
 
     int128 public decay;
     int128 public maxRatio;
@@ -72,7 +73,9 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         address _token,
         uint256 _decay,
         uint256 _maxRatio,
-        uint256 _minStakeRatio
+        uint256 _minStakeRatio,
+        uint256 _wrapAmount,
+        uint256 _ceilingPct
     ) public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
@@ -80,6 +83,8 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         cv = ConvictionVoting(_cv);
         superfluid = Superfluid(_superfluid);
         token = SuperToken(_token);
+        wrapAmount = _wrapAmount;
+        ceilingPct = _ceilingPct;
         setFlowSettings(_decay, _maxRatio, _minStakeRatio);
     }
 
@@ -97,14 +102,22 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         emit FlowSettingsChanged(_decay, _maxRatio, _minStakeRatio);
     }
 
+    function setWrapAmount(uint256 _wrapAmount) public onlyOwner {
+        wrapAmount = _wrapAmount;
+    }
+
+    function setCeilingPct(uint256 _ceilingPct) public onlyOwner {
+        ceilingPct = _ceilingPct;
+    }
+
     function syncSupertoken() public onlyOwner {
         uint256 superTokenPoolBalance = token.balanceOf(cv.vault());
         uint256 tokenPoolBalance = FundsManager(cv.vault()).balance(cv.requestToken());
         
         // we never have more than 5% of the pool in superToken
-        require(superTokenPoolBalance <= tokenPoolBalance / 20, "SuperToken pool balance above 5% ceiling");
+        require(superTokenPoolBalance <= tokenPoolBalance / ceilingPct, "SuperToken pool balance above ceiling");
        
-        superfluid.upgrade(token, SUPERTOKEN_WRAP_AMOUNT);
+        superfluid.upgrade(token, wrapAmount);
     }
 
     function removeProposals(uint256[] memory _proposalIds) public onlyOwner {
