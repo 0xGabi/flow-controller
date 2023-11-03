@@ -14,10 +14,14 @@ contract SetupScript is UpgradeScripts {
     address superfluid = vm.envAddress("SUPERFLUID_APP");
     address superToken = vm.envAddress("SUPER_TOKEN");
 
+    uint256 WRAP_AMOUNT = 200 ether;
+    uint256 CEILING_BSP = 500; // 5% of Common Pool expresed as Basis Points
+
     // flow settings, check https://www.desmos.com/calculator/zce2ygj7bd for more details
     uint256 DECAY = 999999197747000000; // 10 days (864000 seconds) to reach 50% of targetRate, check https://www.desmos.com/calculator/twlx3u8e9u for mor details
     uint256 MAX_RATIO = 19290123456; // 5% of Common Pool per month = Math.floor(0.05e18 / (30 * 24 * 60 * 60))
     uint256 MIN_STAKE_RATIO = 25000000000000000; // 2.5% of Total Support = the minimum stake to start receiving funds
+
 
     /// @dev using OZ's ERC1967Proxy
     function getDeployProxyCode(address implementation, bytes memory initCall)
@@ -50,7 +54,7 @@ contract SetupScript is UpgradeScripts {
 
         // encodes function call
         bytes memory initCall =
-            abi.encodeCall(FluidProposals.initialize, (cv, superfluid, superToken, DECAY, MAX_RATIO, MIN_STAKE_RATIO));
+            abi.encodeCall(FluidProposals.initialize, (cv, superfluid, superToken, DECAY, MAX_RATIO, MIN_STAKE_RATIO, WRAP_AMOUNT, CEILING_BSP));
         address proxy = setUpProxy(implementation, initCall);
 
         fluidProposals = FluidProposals(proxy);

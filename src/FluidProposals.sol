@@ -36,7 +36,7 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     SuperToken public token;
 
     uint256 public wrapAmount;
-    uint256 public ceilingPct;
+    uint256 public ceilingBps;
 
     int128 public decay;
     int128 public maxRatio;
@@ -75,16 +75,18 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         uint256 _maxRatio,
         uint256 _minStakeRatio,
         uint256 _wrapAmount,
-        uint256 _ceilingPct
+        uint256 _ceilingBps
     ) public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
+
+        require(_ceilingBps <= 500, "Ceiling can't be more than 5%");
 
         cv = ConvictionVoting(_cv);
         superfluid = Superfluid(_superfluid);
         token = SuperToken(_token);
         wrapAmount = _wrapAmount;
-        ceilingPct = _ceilingPct;
+        ceilingBps = _ceilingBps;
         setFlowSettings(_decay, _maxRatio, _minStakeRatio);
     }
 
@@ -106,16 +108,18 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         wrapAmount = _wrapAmount;
     }
 
-    function setCeilingPct(uint256 _ceilingPct) public onlyOwner {
-        ceilingPct = _ceilingPct;
+    function setCeilingBps(uint256 _ceilingBps) public onlyOwner {
+        require(_ceilingBps <= 500, "Ceiling can't be more than 5%");
+        ceilingBps = _ceilingBps;
     }
 
     function syncSupertoken() public onlyOwner {
-        uint256 superTokenPoolBalance = token.balanceOf(cv.vault());
-        uint256 tokenPoolBalance = FundsManager(cv.vault()).balance(cv.requestToken());
+        uint256 superTokenPoolBalance = token.balanceOf(cv.fundsManager());
+        uint256 tokenPoolBalance = FundsManager(cv.fundsManager()).balance(cv.requestToken());
         
-        // we never have more than 5% of the pool in superToken
-        require(superTokenPoolBalance <= tokenPoolBalance / ceilingPct, "SuperToken pool balance above ceiling");
+        // we never have more than ceiling % of the pool in superToken
+        // we express ceiling as basis points
+        require(superTokenPoolBalance <= (tokenPoolBalance * ceilingBps) / 10000, "SuperToken pool balance above ceiling");
        
         superfluid.upgrade(token, wrapAmount);
     }
@@ -129,6 +133,13 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function registerProposals(uint256[] memory _proposalIds, address[] memory _addresses) public onlyOwner {
         for (uint256 i = 0; i < _proposalIds.length; i++) {
             _registerProposal(_proposalIds[i], _addresses[i]);
+        }
+    }
+
+    // useful when flow is liquidated and we need to recreate it
+    function createProposalsFlow(uint256[] memory _proposalIds) public onlyOwner {
+        for (uint256 i = 0; i < _proposalIds.length; i++) {
+            superfluid.createFlow(token, registeredProposals[_proposalIds[i]].beneficiary, int96(1), "");
         }
     }
 
@@ -338,7 +349,7 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             _targetRate = 0;
         } else {
             // The old CV that 1Hive uses have a vault reference instead of fundsManager
-            uint256 funds = FundsManager(cv.vault()).balance(cv.requestToken());
+            uint256 funds = FundsManager(cv.fundsManager()).balance(cv.requestToken());
             uint256 _minStake = minStake();
             _targetRate =
                 (ONE.sub(_minStake.divu(_stake > _minStake ? _stake : _minStake).sqrt())).mulu(maxRatio.mulu(funds));
