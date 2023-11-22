@@ -114,8 +114,8 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function syncSupertoken() public onlyOwner {
-        uint256 superTokenPoolBalance = FundsManager(cv.fundsManager()).balance(address(token)); 
-        uint256 tokenPoolBalance = FundsManager(cv.fundsManager()).balance(cv.requestToken());
+        uint256 superTokenPoolBalance = FundsManager(cv.vault()).balance(address(token)); 
+        uint256 tokenPoolBalance = FundsManager(cv.vault()).balance(cv.requestToken());
         
         // we never have more than ceiling % of the pool in superToken
         // we express ceiling as basis points
@@ -348,8 +348,7 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         if (_stake == 0) {
             _targetRate = 0;
         } else {
-            // The old CV that 1Hive uses have a vault reference instead of fundsManager
-            uint256 funds = FundsManager(cv.fundsManager()).balance(cv.requestToken());
+            uint256 funds = FundsManager(cv.vault()).balance(cv.requestToken());
             uint256 _minStake = minStake();
             _targetRate =
                 (ONE.sub(_minStake.divu(_stake > _minStake ? _stake : _minStake).sqrt())).mulu(maxRatio.mulu(funds));
