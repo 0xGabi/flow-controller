@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity >=0.8.13;
+pragma solidity >=0.8.17;
 
 import "forge-std/Test.sol";
 
@@ -7,19 +7,15 @@ import {FluidProposals} from "src/FluidProposals.sol";
 import {SetupScript} from "src/SetupScript.sol";
 import {ABDKMath64x64} from "src/libraries/ABDKMath64x64.sol";
 
-import "./interfaces/IACL.sol";
-
-contract FluidProposalsTest is SetupScript {
+contract FluidProposalsTest is SetupScript, Test {
     using ABDKMath64x64 for int128;
     using ABDKMath64x64 for uint256;
 
     // accounts
     address sender = address(1);
     address notAuthorized = address(2);
-    address creator = 0x5CfAdf589a694723F9Ed167D647582B3Db3b33b3;
 
     // fork env
-    uint256 GNOSIS_FORK_BLOCK_NUMBER = 28687355; // Mime token factory deployment block
     string GNOSIS_RPC_URL = vm.envOr("GNOSIS_RPC_URL", string("https://rpc.gnosis.gateway.fm"));
 
     function setUpUpgradeScripts() internal override {
@@ -28,22 +24,50 @@ contract FluidProposalsTest is SetupScript {
 
     function setUp() public {
         // if in fork mode create and select fork
-        vm.createSelectFork(GNOSIS_RPC_URL, GNOSIS_FORK_BLOCK_NUMBER);
+        vm.createSelectFork(GNOSIS_RPC_URL);
 
-        fluidProposals = FluidProposals(0x6705B54dC554c781B834FCc5Ae18402127DD88ba);
+        setUpContracts();
 
         // labels
         vm.label(sender, "sender");
         vm.label(notAuthorized, "notAuthorizedAddress");
     }
 
-    function testEnv() public view {
-        require(keccak256(abi.encode(fluidProposals.cv())) == keccak256(abi.encode(cv)));
-        require(keccak256(abi.encode(fluidProposals.superfluid())) == keccak256(abi.encode(superfluid)));
-        require(keccak256(abi.encode(fluidProposals.token())) == keccak256(abi.encode(superToken)));
+    function assertOsmoticParam(int128 _poolParam, uint256 _param) public {
+        assertEq(_poolParam.mulu(1e18), _param);
     }
 
-    function testRemove() public {
-        fluidProposals.sync();
+    function testEnv() public view {
+        require(address(fluidProposals.cv()) == cv);
+        require(address(fluidProposals.superfluid()) == superfluid);
+        require(address(fluidProposals.token()) == superToken);
+        require(fluidProposals.wrapAmount() == WRAP_AMOUNT);
+        require(fluidProposals.ceilingBps() == CEILING_BSP);
+    }
+
+    function testSetWrapAmount(uint256 _amount) public {
+        fluidProposals.setWrapAmount(_amount);
+
+        require(fluidProposals.wrapAmount() == _amount);
+    }
+    
+    function testFailSetWrapAmountNotAuthorized(uint256 _amount) public {
+        vm.prank(notAuthorized);
+
+        fluidProposals.setWrapAmount(_amount);
+    }
+
+    function testSetCeilingBps(uint256 _ceilingBps) public {
+        vm.assume(_ceilingBps <= 500);
+
+        fluidProposals.setCeilingBps(_ceilingBps);
+
+        require(fluidProposals.ceilingBps() == _ceilingBps);
+    }
+
+    function testFailSetCeilingBps(uint256 _ceilingBps) public {
+        vm.assume(_ceilingBps > 500);
+
+        fluidProposals.setCeilingBps(_ceilingBps);
     }
 }
