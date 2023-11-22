@@ -50,6 +50,12 @@ contract FluidProposalsTest is SetupScript, Test {
 
         require(fluidProposals.wrapAmount() == _amount);
     }
+    
+    function testFailSetWrapAmountNotAuthorized(uint256 _amount) public {
+        vm.prank(notAuthorized);
+
+        fluidProposals.setWrapAmount(_amount);
+    }
 
     function testSetCeilingBps(uint256 _ceilingBps) public {
         vm.assume(_ceilingBps <= 500);
