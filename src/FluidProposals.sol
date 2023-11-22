@@ -113,7 +113,7 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         ceilingBps = _ceilingBps;
     }
 
-    function syncSupertoken() public onlyOwner {
+    function syncSupertoken() external {
         uint256 superTokenPoolBalance = FundsManager(cv.vault()).balance(address(token)); 
         uint256 tokenPoolBalance = FundsManager(cv.vault()).balance(cv.requestToken());
         
