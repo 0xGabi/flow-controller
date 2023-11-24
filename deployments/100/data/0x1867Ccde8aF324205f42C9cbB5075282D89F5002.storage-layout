@@ -1,139 +1,155 @@
 {
   "storage": [
     {
-      "astId": 26745,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 32092,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "_initialized",
       "offset": 0,
       "slot": "0",
       "type": "t_uint8"
     },
     {
-      "astId": 26748,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 32095,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "_initializing",
       "offset": 1,
       "slot": "0",
       "type": "t_bool"
     },
     {
-      "astId": 27368,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 32292,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "__gap",
       "offset": 0,
       "slot": "1",
       "type": "t_array(t_uint256)50_storage"
     },
     {
-      "astId": 26228,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 32300,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "_owner",
       "offset": 0,
       "slot": "51",
       "type": "t_address"
     },
     {
-      "astId": 26348,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 32420,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "__gap",
       "offset": 0,
       "slot": "52",
       "type": "t_array(t_uint256)49_storage"
     },
     {
-      "astId": 26727,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 32856,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "__gap",
       "offset": 0,
       "slot": "101",
       "type": "t_array(t_uint256)50_storage"
     },
     {
-      "astId": 27042,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 32987,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "__gap",
       "offset": 0,
       "slot": "151",
       "type": "t_array(t_uint256)50_storage"
     },
     {
-      "astId": 31850,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 36096,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "cv",
       "offset": 0,
       "slot": "201",
-      "type": "t_contract(ConvictionVoting)33205"
+      "type": "t_contract(ConvictionVoting)33029"
     },
     {
-      "astId": 31853,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 36099,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "superfluid",
       "offset": 0,
       "slot": "202",
-      "type": "t_contract(Superfluid)33341"
+      "type": "t_contract(Superfluid)33187"
     },
     {
-      "astId": 31856,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 36102,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "token",
       "offset": 0,
       "slot": "203",
-      "type": "t_contract(SuperToken)33302"
+      "type": "t_contract(SuperToken)33142"
     },
     {
-      "astId": 31858,
-      "contract": "src/FluidProposals.sol:FluidProposals",
-      "label": "decay",
+      "astId": 36104,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
+      "label": "wrapAmount",
       "offset": 0,
       "slot": "204",
-      "type": "t_int128"
+      "type": "t_uint256"
     },
     {
-      "astId": 31860,
-      "contract": "src/FluidProposals.sol:FluidProposals",
-      "label": "maxRatio",
-      "offset": 16,
-      "slot": "204",
-      "type": "t_int128"
-    },
-    {
-      "astId": 31862,
-      "contract": "src/FluidProposals.sol:FluidProposals",
-      "label": "minStakeRatio",
+      "astId": 36106,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
+      "label": "ceilingBps",
       "offset": 0,
       "slot": "205",
+      "type": "t_uint256"
+    },
+    {
+      "astId": 36108,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
+      "label": "decay",
+      "offset": 0,
+      "slot": "206",
       "type": "t_int128"
     },
     {
-      "astId": 31867,
-      "contract": "src/FluidProposals.sol:FluidProposals",
-      "label": "flows",
-      "offset": 0,
+      "astId": 36110,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
+      "label": "maxRatio",
+      "offset": 16,
       "slot": "206",
-      "type": "t_mapping(t_uint256,t_struct(Flow)31842_storage)"
+      "type": "t_int128"
     },
     {
-      "astId": 31872,
-      "contract": "src/FluidProposals.sol:FluidProposals",
-      "label": "registeredProposals",
+      "astId": 36112,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
+      "label": "minStakeRatio",
       "offset": 0,
       "slot": "207",
-      "type": "t_mapping(t_uint256,t_struct(Proposal)31847_storage)"
+      "type": "t_int128"
     },
     {
-      "astId": 31876,
-      "contract": "src/FluidProposals.sol:FluidProposals",
-      "label": "registeredBeneficiary",
+      "astId": 36117,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
+      "label": "flows",
       "offset": 0,
       "slot": "208",
+      "type": "t_mapping(t_uint256,t_struct(Flow)36088_storage)"
+    },
+    {
+      "astId": 36122,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
+      "label": "registeredProposals",
+      "offset": 0,
+      "slot": "209",
+      "type": "t_mapping(t_uint256,t_struct(Proposal)36093_storage)"
+    },
+    {
+      "astId": 36126,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
+      "label": "registeredBeneficiary",
+      "offset": 0,
+      "slot": "210",
       "type": "t_mapping(t_address,t_bool)"
     },
     {
-      "astId": 31880,
-      "contract": "src/FluidProposals.sol:FluidProposals",
+      "astId": 36130,
+      "contract": "src/FluidProposals.flattened.sol:FluidProposals",
       "label": "activeProposals",
       "offset": 0,
-      "slot": "209",
+      "slot": "211",
       "type": "t_array(t_uint256)15_storage"
     }
   ],
@@ -166,17 +182,17 @@
       "label": "bool",
       "numberOfBytes": "1"
     },
-    "t_contract(ConvictionVoting)33205": {
+    "t_contract(ConvictionVoting)33029": {
       "encoding": "inplace",
       "label": "contract ConvictionVoting",
       "numberOfBytes": "20"
     },
-    "t_contract(SuperToken)33302": {
+    "t_contract(SuperToken)33142": {
       "encoding": "inplace",
       "label": "contract SuperToken",
       "numberOfBytes": "20"
     },
-    "t_contract(Superfluid)33341": {
+    "t_contract(Superfluid)33187": {
       "encoding": "inplace",
       "label": "contract Superfluid",
       "numberOfBytes": "20"
@@ -193,36 +209,36 @@
       "numberOfBytes": "32",
       "value": "t_bool"
     },
-    "t_mapping(t_uint256,t_struct(Flow)31842_storage)": {
+    "t_mapping(t_uint256,t_struct(Flow)36088_storage)": {
       "encoding": "mapping",
       "key": "t_uint256",
       "label": "mapping(uint256 => struct FluidProposals.Flow)",
       "numberOfBytes": "32",
-      "value": "t_struct(Flow)31842_storage"
+      "value": "t_struct(Flow)36088_storage"
     },
-    "t_mapping(t_uint256,t_struct(Proposal)31847_storage)": {
+    "t_mapping(t_uint256,t_struct(Proposal)36093_storage)": {
       "encoding": "mapping",
       "key": "t_uint256",
       "label": "mapping(uint256 => struct FluidProposals.Proposal)",
       "numberOfBytes": "32",
-      "value": "t_struct(Proposal)31847_storage"
+      "value": "t_struct(Proposal)36093_storage"
     },
-    "t_struct(Flow)31842_storage": {
+    "t_struct(Flow)36088_storage": {
       "encoding": "inplace",
       "label": "struct FluidProposals.Flow",
       "numberOfBytes": "64",
       "members": [
         {
-          "astId": 31839,
-          "contract": "src/FluidProposals.sol:FluidProposals",
+          "astId": 36085,
+          "contract": "src/FluidProposals.flattened.sol:FluidProposals",
           "label": "lastRate",
           "offset": 0,
           "slot": "0",
           "type": "t_uint256"
         },
         {
-          "astId": 31841,
-          "contract": "src/FluidProposals.sol:FluidProposals",
+          "astId": 36087,
+          "contract": "src/FluidProposals.flattened.sol:FluidProposals",
           "label": "lastTime",
           "offset": 0,
           "slot": "1",
@@ -230,22 +246,22 @@
         }
       ]
     },
-    "t_struct(Proposal)31847_storage": {
+    "t_struct(Proposal)36093_storage": {
       "encoding": "inplace",
       "label": "struct FluidProposals.Proposal",
       "numberOfBytes": "32",
       "members": [
         {
-          "astId": 31844,
-          "contract": "src/FluidProposals.sol:FluidProposals",
+          "astId": 36090,
+          "contract": "src/FluidProposals.flattened.sol:FluidProposals",
           "label": "registered",
           "offset": 0,
           "slot": "0",
           "type": "t_bool"
         },
         {
-          "astId": 31846,
-          "contract": "src/FluidProposals.sol:FluidProposals",
+          "astId": 36092,
+          "contract": "src/FluidProposals.flattened.sol:FluidProposals",
           "label": "beneficiary",
           "offset": 1,
           "slot": "0",

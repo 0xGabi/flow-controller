@@ -96,6 +96,18 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
+    function setConvictionVoting(address _cv) public onlyOwner {
+        cv = ConvictionVoting(_cv);
+    }
+
+    function setSuperfluid(address _superfluid) public onlyOwner {
+        superfluid = Superfluid(_superfluid);
+    }
+
+    function setToken(address _token) public onlyOwner {
+        token = SuperToken(_token);
+    }
+
     function setFlowSettings(uint256 _decay, uint256 _maxRatio, uint256 _minStakeRatio) public onlyOwner {
         decay = _decay.divu(1e18).add(1);
         maxRatio = _maxRatio.divu(1e18).add(1);
