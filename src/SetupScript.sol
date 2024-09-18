@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+pragma solidity 0.8.27;
 
 import {UpgradeScripts} from "upgrade-scripts/UpgradeScripts.sol";
 import {ERC1967Proxy} from "@oz/proxy/ERC1967/ERC1967Proxy.sol";
 import {UUPSUpgradeable} from "@oz/proxy/utils/UUPSUpgradeable.sol";
 
 import {FluidProposals} from "./FluidProposals.sol";
+
+import "forge-std/console.sol";
 
 contract SetupScript is UpgradeScripts {
     FluidProposals fluidProposals;
@@ -14,8 +16,8 @@ contract SetupScript is UpgradeScripts {
     address superfluid = vm.envAddress("SUPERFLUID_APP");
     address superToken = vm.envAddress("SUPER_TOKEN");
 
-    uint256 WRAP_AMOUNT = 200 ether;
-    uint256 CEILING_BSP = 500; // 5% of Common Pool expresed as Basis Points
+    uint256 WRAP_AMOUNT = 100 ether;
+    uint256 CEILING_BSP = 250; // 2.5% of Common Pool expresed as Basis Points
 
     // flow settings, check https://www.desmos.com/calculator/zce2ygj7bd for more details
     uint256 DECAY = 999999197747000000; // 10 days (864000 seconds) to reach 50% of targetRate, check https://www.desmos.com/calculator/twlx3u8e9u for mor details
@@ -49,9 +51,10 @@ contract SetupScript is UpgradeScripts {
 
     function setUpContracts() internal {
         // encodes constructor call
-        bytes memory constructorArgs = abi.encode(uint256(1));
+        bytes memory constructorArgs = abi.encode(uint256(2));
         address implementation = setUpContract("FluidProposals", constructorArgs);
 
+        console.log("FluidProposals new implementation: %s", implementation);
         // encodes function call
         bytes memory initCall =
             abi.encodeCall(FluidProposals.initialize, (cv, superfluid, superToken, DECAY, MAX_RATIO, MIN_STAKE_RATIO, WRAP_AMOUNT, CEILING_BSP));
@@ -61,10 +64,9 @@ contract SetupScript is UpgradeScripts {
     }
 
     function integrationTest() internal view {
-        require(fluidProposals.owner() == msg.sender);
-
-        require(keccak256(abi.encode(fluidProposals.cv())) == keccak256(abi.encode(cv)));
-        require(keccak256(abi.encode(fluidProposals.superfluid())) == keccak256(abi.encode(superfluid)));
-        require(keccak256(abi.encode(fluidProposals.token())) == keccak256(abi.encode(superToken)));
+        require(keccak256(abi.encode(fluidProposals.cv())) == keccak256(abi.encode(cv)),"cv");
+        require(keccak256(abi.encode(fluidProposals.superfluid())) == keccak256(abi.encode(superfluid)),"superfluid");
+        require(keccak256(abi.encode(fluidProposals.token())) == keccak256(abi.encode(superToken)), "superToken");
+        require(fluidProposals.owner() == msg.sender,"owner");
     }
 }

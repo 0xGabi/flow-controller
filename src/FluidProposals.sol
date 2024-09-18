@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.27;
 
 import {OwnableUpgradeable} from "@oz-upgradeable/access/OwnableUpgradeable.sol";
 import {Initializable} from "@oz-upgradeable/proxy/utils/Initializable.sol";
@@ -42,10 +42,10 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     int128 public maxRatio;
     int128 public minStakeRatio;
 
-    mapping(uint256 => Flow) internal flows;
-    mapping(uint256 => Proposal) internal registeredProposals;
-    mapping(address => bool) internal registeredBeneficiary;
-    uint256[15] internal activeProposals;
+    mapping(uint256 => Flow) public flows;
+    mapping(uint256 => Proposal) public registeredProposals;
+    mapping(address => bool) public registeredBeneficiary;
+    uint256[15] public activeProposals;
 
     event FlowSettingsChanged(uint256 decay, uint256 maxRatio, uint256 minStakeRatio);
     event ProposalRegistered(uint256 indexed id, address beneficiary);
@@ -53,6 +53,8 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     event ProposalReplaced(uint256 indexed id);
     event ProposalRemoved(uint256 indexed id);
     event FlowUpdated(uint256 indexed id, address indexed beneficiary, uint256 rate);
+    event FlowUpdatedError(uint256 proposalId, address beneficiary, uint256 rate, bytes error);
+    event DeleteFlowFailed(uint256 proposalId, bytes error);
 
     error ProposalOnlyActive();
     error ProposalOnlySignaling();
@@ -60,6 +62,11 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     error ProposalAlreadyActive();
     error ProposalAlreadyRemoved();
     error ProposalNeedsMoreStake();
+    error ProposalNotRegistered();
+
+    error InvalidProposalId();
+    error InvalidBeneficiaryAddress();
+    error BeneficiaryAlreadyRegistered();
 
     // @custom:oz-upgrades-unsafe-allow constructor
     constructor(uint256 version_) {
@@ -88,6 +95,9 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         wrapAmount = _wrapAmount;
         ceilingBps = _ceilingBps;
         setFlowSettings(_decay, _maxRatio, _minStakeRatio);
+    }
+
+    function initialize2() reinitializer(2) external {
     }
 
     function implementation() external view returns (address) {
@@ -136,9 +146,9 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         superfluid.upgrade(token, wrapAmount);
     }
 
-    function removeProposals(uint256[] memory _proposalIds) public onlyOwner {
-        for (uint256 i = 0; i < _proposalIds.length; i++) {
-            _removeProposal(_proposalIds[i]);
+    function removeProposals(uint256[] memory _proposalIndexes) public onlyOwner {
+        for (uint256 i = 0; i < _proposalIndexes.length; i++) {
+            _removeProposal(_proposalIndexes[i] );
         }
     }
 
@@ -156,38 +166,30 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function registerProposal(uint256 _proposalId, address _beneficiary) public {
-        require(_proposalId != 0);
-        require(_beneficiary != address(0));
-        require(!registeredBeneficiary[_beneficiary]);
+        require(_proposalId != 0, InvalidProposalId());
+        require(_beneficiary != address(0), InvalidBeneficiaryAddress());
+        require(!registeredBeneficiary[_beneficiary], BeneficiaryAlreadyRegistered());
 
         (uint256 amount,,,,,,, ProposalStatus status, address submmiter,) = cv.getProposal(_proposalId);
 
-        if (status != ProposalStatus.Active) {
-            revert ProposalOnlyActive();
-        }
-
-        if (amount != 0) {
-            revert ProposalOnlySignaling();
-        }
-
-        if (msg.sender != submmiter) {
-            revert ProposalOnlySubmmiter();
-        }
-
+        require(status == ProposalStatus.Active, ProposalOnlyActive());
+        require(amount == 0, ProposalOnlySignaling());
+        require(msg.sender == submmiter, ProposalOnlySubmmiter());
+        
         _registerProposal(_proposalId, _beneficiary);
     }
 
     function activateProposal(uint256 _proposalId) public {
-        require(registeredProposals[_proposalId].registered);
+        require(registeredProposals[_proposalId].registered, ProposalNotRegistered());
+
 
         (,,, uint256 min,,,,,,) = cv.getProposal(_proposalId);
 
         uint256 minIndex = _proposalId;
 
         for (uint256 i = 0; i < activeProposals.length; i++) {
-            if (activeProposals[i] == _proposalId) {
-                revert ProposalAlreadyActive();
-            }
+            require(activeProposals[i] != _proposalId, ProposalAlreadyActive());
+
             if (activeProposals[i] == 0) {
                 // If position i is empty, use it
                 min = 0;
@@ -200,10 +202,8 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
                 minIndex = i;
             }
         }
-
-        if (activeProposals[minIndex] == _proposalId) {
-            revert ProposalNeedsMoreStake();
-        }
+        
+        require(activeProposals[minIndex] != _proposalId, ProposalNeedsMoreStake());
 
         if (activeProposals[minIndex] == 0) {
             _activateProposal(minIndex, _proposalId);
@@ -230,7 +230,7 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
         revert ProposalAlreadyRemoved();
     }
-
+    
     function sync() external {
         for (uint256 i = 0; i < activeProposals.length; i++) {
             uint256 _proposalId = activeProposals[i];
@@ -238,7 +238,7 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             if (flow.lastTime == block.timestamp || _proposalId == 0) {
                 continue; // Empty or rates already updated
             }
-
+            
             // Check still an active proposal
             (,,,,,,, ProposalStatus status,,) = cv.getProposal(_proposalId);
             if (status != ProposalStatus.Active) {
@@ -252,11 +252,14 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
             if (flow.lastRate != 0) {
                 // update flow
-                superfluid.updateFlow(
+                try superfluid.updateFlow(
                     token, registeredProposals[_proposalId].beneficiary, int96(int256(flow.lastRate)), ""
-                );
+                ) {
+                    emit FlowUpdated(_proposalId, registeredProposals[_proposalId].beneficiary, flow.lastRate);                    
+                } catch (bytes memory error) {
+                    emit FlowUpdatedError(_proposalId, registeredProposals[_proposalId].beneficiary, flow.lastRate, error);
+                }
 
-                emit FlowUpdated(_proposalId, registeredProposals[_proposalId].beneficiary, flow.lastRate);
             }
         }
     }
@@ -285,7 +288,11 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     function _removeProposal(uint256 _proposalIndex) internal {
         uint256 proposalId = activeProposals[_proposalIndex];
-        superfluid.deleteFlow(token, registeredProposals[proposalId].beneficiary);
+        
+        try superfluid.deleteFlow(token, registeredProposals[proposalId].beneficiary){
+        }catch(bytes memory error){
+            emit DeleteFlowFailed(proposalId, error);
+        }
         activeProposals[_proposalIndex] = 0;
 
         registeredBeneficiary[registeredProposals[proposalId].beneficiary] = false;

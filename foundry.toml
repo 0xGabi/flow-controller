@@ -1,5 +1,5 @@
 [profile.default]
-solc = "0.8.17"
+# solc = "0.8.17"
 optimizer = true # Enable or disable the solc optimizer
 optimizer_runs = 999999 # The number of optimizer runs
 verbosity = 3 # The verbosity of tests
