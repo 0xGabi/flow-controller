@@ -12,8 +12,6 @@ import {SuperToken} from "./interfaces/ISuperToken.sol";
 
 import {ABDKMath64x64} from "./libraries/ABDKMath64x64.sol";
 
-// import "forge-std/console.sol"; 
-
 contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     using ABDKMath64x64 for int128;
     using ABDKMath64x64 for uint256;
@@ -146,10 +144,7 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function removeProposals(uint256[] memory _proposalIndexes) public onlyOwner {
-        // console.log("Removing proposals");
-        // console.log(_proposalIndexes.length);
         for (uint256 i = 0; i < _proposalIndexes.length; i++) {
-            // console.log("Removing proposal %d", _proposalIndexes[i]);
             _removeProposal(_proposalIndexes[i] );
         }
     }
@@ -241,7 +236,6 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
                 continue; // Empty or rates already updated
             }
             
-            // console.log(_proposalId);
             // Check still an active proposal
             (,,,,,,, ProposalStatus status,,) = cv.getProposal(_proposalId);
             if (status != ProposalStatus.Active) {
@@ -249,7 +243,6 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
                 continue;
             }
 
-            // console.log("Flow rate %d", flow.lastRate);
             // calculateRate and store it
             flow.lastRate = getCurrentRate(_proposalId);
             flow.lastTime = block.timestamp;
@@ -261,8 +254,6 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
                 ) {
                     emit FlowUpdated(_proposalId, registeredProposals[_proposalId].beneficiary, flow.lastRate);                    
                 } catch (bytes memory error) {
-                    // console.log("Flow update failed:");
-                    // console.logBytes(error);
                     emit FlowUpdatedError(_proposalId, registeredProposals[_proposalId].beneficiary, flow.lastRate, error);
                 }
 
@@ -293,14 +284,10 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function _removeProposal(uint256 _proposalIndex) internal {
-        // console.log("Removing proposalIndex %d", _proposalIndex);
         uint256 proposalId = activeProposals[_proposalIndex];
-        // console.log("Proposal id %d", proposalId);
+        
         try superfluid.deleteFlow(token, registeredProposals[proposalId].beneficiary){
-            // console.log("Flow deleted");
         }catch(bytes memory error){
-            // console.log("Flow delete failed:");
-            // console.logBytes(error);
             emit DeleteFlowFailed(proposalId, error);
         }
         activeProposals[_proposalIndex] = 0;
