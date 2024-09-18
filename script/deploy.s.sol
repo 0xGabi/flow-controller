@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+pragma solidity 0.8.27;
 
 import {SetupScript} from "src/SetupScript.sol";
 
@@ -14,7 +14,7 @@ contract deploy is SetupScript {
     function run() external {
         // uncommenting this line would mark the two contracts as having a compatible storage layout
         // isUpgradeSafe[31337][0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0][0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9] = true; // prettier-ignore
-
+        // isUpgradeSafe[31337][0x5FbDB2315678afecb367f032d93F642f64180aa3][0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0] = true;
         // uncomment with current timestamp to confirm deployments on mainnet for 15 minutes or always allow via (block.timestamp)
         // mainnetConfirmation = 1700616755;
 

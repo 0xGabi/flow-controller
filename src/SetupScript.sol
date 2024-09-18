@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+pragma solidity 0.8.27;
 
 import {UpgradeScripts} from "upgrade-scripts/UpgradeScripts.sol";
 import {ERC1967Proxy} from "@oz/proxy/ERC1967/ERC1967Proxy.sol";
@@ -14,8 +14,8 @@ contract SetupScript is UpgradeScripts {
     address superfluid = vm.envAddress("SUPERFLUID_APP");
     address superToken = vm.envAddress("SUPER_TOKEN");
 
-    uint256 WRAP_AMOUNT = 200 ether;
-    uint256 CEILING_BSP = 500; // 5% of Common Pool expresed as Basis Points
+    uint256 WRAP_AMOUNT = 100 ether;
+    uint256 CEILING_BSP = 250; // 2.5% of Common Pool expresed as Basis Points
 
     // flow settings, check https://www.desmos.com/calculator/zce2ygj7bd for more details
     uint256 DECAY = 999999197747000000; // 10 days (864000 seconds) to reach 50% of targetRate, check https://www.desmos.com/calculator/twlx3u8e9u for mor details
