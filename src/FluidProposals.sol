@@ -97,6 +97,9 @@ contract FluidProposals is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         setFlowSettings(_decay, _maxRatio, _minStakeRatio);
     }
 
+    function initialize2() reinitializer(2) external {
+    }
+
     function implementation() external view returns (address) {
         return _getImplementation();
     }

@@ -7,6 +7,8 @@ import {UUPSUpgradeable} from "@oz/proxy/utils/UUPSUpgradeable.sol";
 
 import {FluidProposals} from "./FluidProposals.sol";
 
+import "forge-std/console.sol";
+
 contract SetupScript is UpgradeScripts {
     FluidProposals fluidProposals;
 
@@ -49,9 +51,10 @@ contract SetupScript is UpgradeScripts {
 
     function setUpContracts() internal {
         // encodes constructor call
-        bytes memory constructorArgs = abi.encode(uint256(1));
+        bytes memory constructorArgs = abi.encode(uint256(2));
         address implementation = setUpContract("FluidProposals", constructorArgs);
 
+        console.log("FluidProposals new implementation: %s", implementation);
         // encodes function call
         bytes memory initCall =
             abi.encodeCall(FluidProposals.initialize, (cv, superfluid, superToken, DECAY, MAX_RATIO, MIN_STAKE_RATIO, WRAP_AMOUNT, CEILING_BSP));
@@ -61,10 +64,9 @@ contract SetupScript is UpgradeScripts {
     }
 
     function integrationTest() internal view {
-        require(fluidProposals.owner() == msg.sender);
-
-        require(keccak256(abi.encode(fluidProposals.cv())) == keccak256(abi.encode(cv)));
-        require(keccak256(abi.encode(fluidProposals.superfluid())) == keccak256(abi.encode(superfluid)));
-        require(keccak256(abi.encode(fluidProposals.token())) == keccak256(abi.encode(superToken)));
+        require(keccak256(abi.encode(fluidProposals.cv())) == keccak256(abi.encode(cv)),"cv");
+        require(keccak256(abi.encode(fluidProposals.superfluid())) == keccak256(abi.encode(superfluid)),"superfluid");
+        require(keccak256(abi.encode(fluidProposals.token())) == keccak256(abi.encode(superToken)), "superToken");
+        require(fluidProposals.owner() == msg.sender,"owner");
     }
 }
